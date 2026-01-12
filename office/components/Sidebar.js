@@ -11,11 +11,8 @@ export default function Sidebar() {
     const menuItems = [
         { name: "Dashboard", icon: <HomeIcon />, href: "/" },
         { name: "Projects", icon: <FolderIcon />, href: "/projects" },
-        { name: "Tasks", icon: <ClipboardListIcon />, href: "/tasks" },
-        { name: "Team", icon: <UsersIcon />, href: "/team" },
-        { name: "Calendar", icon: <CalendarIcon />, href: "/calendar" },
-        { name: "Reports", icon: <ChartBarIcon />, href: "/reports" },
-        { name: "Settings", icon: <CogIcon />, href: "/settings" },
+        { name: "Users", icon: <UsersIcon />, href: "/users" },
+        { name: "Bugs", icon: <BugIcon />, href: "/bugs" },
     ];
 
     return (
@@ -45,8 +42,8 @@ export default function Sidebar() {
                         key={item.name}
                         href={item.href}
                         className={`group flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 ${pathname === item.href
-                                ? "bg-purple-50 text-purple-700 font-medium"
-                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            ? "bg-purple-50 text-purple-700 font-medium"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                             }`}
                     >
                         <div className={`flex-shrink-0 ${isCollapsed ? "mx-auto" : "mr-3"}`}>
@@ -106,6 +103,14 @@ function ClipboardListIcon() {
     return (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+    );
+}
+
+function BugIcon() {
+    return (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
     );
 }

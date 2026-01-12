@@ -1,0 +1,206 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "name": "Sarah Jenkins",
+      "role": "Product Manager",
+      "avatar": "https://i.pravatar.cc/150?u=u1"
+    },
+    {
+      "id": "u2",
+      "name": "Mike Chen",
+      "role": "Frontend Lead",
+      "avatar": "https://i.pravatar.cc/150?u=u2"
+    },
+    {
+      "id": "u3",
+      "name": "Jessica Lee",
+      "role": "UI/UX Designer",
+      "avatar": "https://i.pravatar.cc/150?u=u3"
+    },
+    {
+      "id": "u4",
+      "name": "David Ross",
+      "role": "Backend Developer",
+      "avatar": "https://i.pravatar.cc/150?u=u4"
+    },
+    {
+      "id": "u5",
+      "name": "Emily White",
+      "role": "QA Engineer",
+      "avatar": "https://i.pravatar.cc/150?u=u5"
+    }
+  ],
+  "sprints": [
+    {
+      "id": "s1",
+      "name": "Sprint 10: Foundation",
+      "startDate": "2024-02-01",
+      "endDate": "2024-02-14",
+      "status": "Completed"
+    },
+    {
+      "id": "s2",
+      "name": "Sprint 11: Core Features",
+      "startDate": "2024-02-15",
+      "endDate": "2024-02-28",
+      "status": "Active"
+    },
+    {
+      "id": "s3",
+      "name": "Sprint 12: Polish & Fixes",
+      "startDate": "2024-03-01",
+      "endDate": "2024-03-14",
+      "status": "Planning"
+    }
+  ],
+  "projects": [
+    {
+      "id": "p1",
+      "title": "E-Commerce Replatform",
+      "description": "Migrating the legacy shop to Next.js + Shopify.",
+      "status": "In Progress",
+      "tasks": [
+        {
+          "id": "ep1",
+          "title": "Shopping Cart Overhaul",
+          "type": "Epic",
+          "status": "In Progress",
+          "assigneeId": "u1",
+          "sprintId": "s2",
+          "subtasks": [
+            {
+              "id": "st1",
+              "title": "Cart State Management",
+              "type": "Story",
+              "status": "Done",
+              "assigneeId": "u2",
+              "sprintId": "s1",
+              "subtasks": [
+                {
+                  "id": "t1",
+                  "title": "Setup Redux Toolkit",
+                  "type": "Task",
+                  "status": "Done",
+                  "assigneeId": "u2",
+                  "sprintId": "s1",
+                  "subtasks": []
+                }
+              ]
+            },
+            {
+              "id": "st2",
+              "title": "Checkout Flow UI",
+              "type": "Story",
+              "status": "In Progress",
+              "assigneeId": "u2",
+              "sprintId": "s2",
+              "subtasks": [
+                {
+                  "id": "t2",
+                  "title": "Implement Address Form",
+                  "type": "Task",
+                  "status": "In Progress",
+                  "assigneeId": "u2",
+                  "sprintId": "s2",
+                  "subtasks": []
+                },
+                {
+                  "id": "bug1",
+                  "title": "Validation Error on Zip Code",
+                  "type": "Bug",
+                  "status": "Todo",
+                  "assigneeId": "u2",
+                  "sprintId": "s2",
+                  "subtasks": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ep2",
+          "title": "Payment Integration",
+          "type": "Epic",
+          "status": "Todo",
+          "assigneeId": "u4",
+          "sprintId": null,
+          "subtasks": [
+            {
+              "id": "bug2",
+              "title": "Stripe Webhook Failure",
+              "type": "Bug",
+              "status": "In Progress",
+              "assigneeId": "u4",
+              "sprintId": "s2",
+              "subtasks": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "title": "Admin Dashboard",
+      "description": "Internal tools for order processing and analytics.",
+      "status": "Planning",
+      "tasks": [
+        {
+          "id": "ep3",
+          "title": "Authentication Module",
+          "type": "Epic",
+          "status": "Done",
+          "assigneeId": "u1",
+          "sprintId": "s1",
+          "subtasks": [
+            {
+              "id": "bug3",
+              "title": "Login Redirect Loop",
+              "type": "Bug",
+              "status": "Done",
+              "assigneeId": "u4",
+              "sprintId": "s1",
+              "subtasks": []
+            }
+          ]
+        },
+        {
+          "id": "ep4",
+          "title": "Data Visualization",
+          "type": "Epic",
+          "status": "Todo",
+          "assigneeId": "u3",
+          "sprintId": "s3",
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "title": "Marketing Website",
+      "description": "Landing page for the Q2 Product Launch.",
+      "status": "In Progress",
+      "tasks": [
+        {
+          "id": "st3",
+          "title": "Hero Section Animation",
+          "type": "Story",
+          "status": "In Progress",
+          "assigneeId": "u3",
+          "sprintId": "s2",
+          "subtasks": [
+            {
+              "id": "bug4",
+              "title": "Animation Jank on Mobile",
+              "type": "Bug",
+              "status": "Todo",
+              "assigneeId": "u5",
+              "sprintId": "s2",
+              "subtasks": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
