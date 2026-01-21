@@ -1,6 +1,6 @@
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import Footer from "./Footer";
+
 
 export default function DashboardLayout({ children }) {
     return (
@@ -11,7 +11,7 @@ export default function DashboardLayout({ children }) {
                 <main className="flex-1 p-8 overflow-y-auto">
                     {children}
                 </main>
-                <Footer />
+
             </div>
         </div>
     );

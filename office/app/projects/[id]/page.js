@@ -6,6 +6,7 @@ import TaskTree from '@/components/TaskTree';
 import Link from 'next/link';
 import Modal from '@/components/Modal';
 import DashboardLayout from '@/components/DashboardLayout';
+import ProgressBar from '@/components/ProgressBar';
 
 export default function ProjectDetailsPage() {
     const { id } = useParams();
@@ -19,7 +20,7 @@ export default function ProjectDetailsPage() {
     const [parentTaskId, setParentTaskId] = useState(null); // For adding subtask
 
     // Form States
-    const [taskForm, setTaskForm] = useState({ title: '', status: 'Todo', type: 'Task', assigneeId: '', sprintId: '' });
+    const [taskForm, setTaskForm] = useState({ title: '', status: 'Todo', type: 'Task', sprintId: '' });
 
     const fetchData = async () => {
         try {
@@ -60,7 +61,6 @@ export default function ProjectDetailsPage() {
             title: task.title,
             status: task.status,
             type: task.type,
-            assigneeId: task.assigneeId || '',
             sprintId: task.sprintId || ''
         });
         setIsEditModalOpen(true);
@@ -68,7 +68,7 @@ export default function ProjectDetailsPage() {
 
     const handleAddClick = (parentId = null) => {
         setParentTaskId(parentId);
-        setTaskForm({ title: '', status: 'Todo', type: 'Task', assigneeId: '', sprintId: '' });
+        setTaskForm({ title: '', status: 'Todo', type: 'Task', sprintId: '' });
         setIsAddModalOpen(true);
     };
 
@@ -152,7 +152,9 @@ export default function ProjectDetailsPage() {
                 ${project.status === 'In Progress' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
                         {project.status}
                     </span>
-                    <span className="text-xs text-gray-400">Project ID: {project.id}</span>
+                    <div className="w-48">
+                        <ProgressBar tasks={project.tasks} />
+                    </div>
                 </div>
             </header>
 
@@ -166,10 +168,9 @@ export default function ProjectDetailsPage() {
                 </button>
             </div>
 
-            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 shadow-inner">
+            <div className="">
                 <TaskTree
                     tasks={project.tasks}
-                    users={data.users}
                     onEdit={handleEditClick}
                     onAddSubtask={handleAddClick}
                 />
@@ -214,19 +215,7 @@ export default function ProjectDetailsPage() {
                             </select>
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-sm text-gray-400 mb-1">Assignee</label>
-                        <select
-                            className="w-full bg-gray-700 rounded p-2 text-white"
-                            value={taskForm.assigneeId}
-                            onChange={e => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
-                        >
-                            <option value="">Unassigned</option>
-                            {data?.users?.map(u => (
-                                <option key={u.id} value={u.id}>{u.name}</option>
-                            ))}
-                        </select>
-                    </div>
+
                     <div>
                         <label className="block text-sm text-gray-400 mb-1">Sprint</label>
                         <select
@@ -280,19 +269,7 @@ export default function ProjectDetailsPage() {
                             </select>
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-sm text-gray-400 mb-1">Assignee</label>
-                        <select
-                            className="w-full bg-gray-700 rounded p-2 text-white"
-                            value={taskForm.assigneeId}
-                            onChange={e => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
-                        >
-                            <option value="">Unassigned</option>
-                            {data?.users?.map(u => (
-                                <option key={u.id} value={u.id}>{u.name}</option>
-                            ))}
-                        </select>
-                    </div>
+
                     <button
                         onClick={createTask}
                         className="w-full bg-green-600 hover:bg-green-500 text-white p-2 rounded font-bold mt-4"

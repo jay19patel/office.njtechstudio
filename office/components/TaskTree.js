@@ -2,17 +2,20 @@
 
 import { useState } from 'react';
 
-const TaskItem = ({ task, depth = 0, users, onEdit, onAddSubtask }) => {
+const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
     const [expanded, setExpanded] = useState(false);
     const hasSubtasks = task.subtasks && task.subtasks.length > 0;
 
-    // Find assignee name
-    const assignee = users?.find(u => u.id === task.assigneeId);
+    // Determine Project ID for linking
+    // If task has projectId (flat list), use it. Otherwise use prop (heirarchical list)
+    const activeProjectId = task.projectId || projectId;
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'Done': return 'bg-green-100 text-green-700 border-green-200';
+            case 'Completed': return 'bg-green-100 text-green-700 border-green-200';
             case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-200';
+            case 'Brainstorming': return 'bg-purple-100 text-purple-700 border-purple-200';
+            case 'Pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
             default: return 'bg-gray-100 text-gray-600 border-gray-200';
         }
     };
@@ -58,18 +61,22 @@ const TaskItem = ({ task, depth = 0, users, onEdit, onAddSubtask }) => {
                             <span className={`text-[10px] font-bold uppercase tracking-wider ${getTypeColor(task.type)}`}>
                                 {task.type}
                             </span>
-                            <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
+                            {activeProjectId ? (
+                                <Link
+                                    href={`/projects/${activeProjectId}/tasks/${task.id}`}
+                                    className="font-medium text-gray-900 text-sm hover:text-blue-600 hover:underline"
+                                >
+                                    {task.title}
+                                </Link>
+                            ) : (
+                                <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {assignee && (
-                        <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
-                            <img src={assignee.avatar} alt={assignee.name} className="w-5 h-5 rounded-full" />
-                            <span className="hidden sm:inline">{assignee.name}</span>
-                        </div>
-                    )}
+
                     <span className={`px-2 py-0.5 rounded text-xs border ${getStatusColor(task.status)}`}>
                         {task.status}
                     </span>
@@ -77,22 +84,24 @@ const TaskItem = ({ task, depth = 0, users, onEdit, onAddSubtask }) => {
                     {/* Action Buttons */}
                     <div className="flex gap-1 ml-2">
                         {onEdit && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+                            <Link
+                                href={`/projects/${activeProjectId}/tasks/${task.id}/edit`}
+                                onClick={(e) => e.stopPropagation()}
                                 className="p-1.5 rounded hover:bg-blue-100 text-blue-500 transition-colors"
                                 title="Edit Task"
                             >
                                 ✎
-                            </button>
+                            </Link>
                         )}
-                        {onAddSubtask && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onAddSubtask(task.id); }}
+                        {onAddSubtask && activeProjectId && (
+                            <Link
+                                href={`/projects/${activeProjectId}/tasks/new`} // Simplified: Redirect to new task page, though ideally we'd pass parentId. For now just generic new task.
+                                onClick={(e) => e.stopPropagation()}
                                 className="p-1.5 rounded hover:bg-green-100 text-green-500 transition-colors"
-                                title="Add Subtask"
+                                title="Add Subtask (Note: Adds to root currently)"
                             >
                                 +
-                            </button>
+                            </Link>
                         )}
                     </div>
                 </div>
@@ -106,7 +115,7 @@ const TaskItem = ({ task, depth = 0, users, onEdit, onAddSubtask }) => {
                             key={subtask.id}
                             task={subtask}
                             depth={depth + 1}
-                            users={users}
+                            projectId={activeProjectId}
                             onEdit={onEdit}
                             onAddSubtask={onAddSubtask}
                         />
@@ -117,7 +126,9 @@ const TaskItem = ({ task, depth = 0, users, onEdit, onAddSubtask }) => {
     );
 };
 
-export default function TaskTree({ tasks, users, onEdit, onAddSubtask }) {
+import Link from 'next/link';
+
+export default function TaskTree({ tasks, projectId, onEdit, onAddSubtask }) {
     if (!tasks || tasks.length === 0) return <div className="text-gray-500 italic p-4 text-sm">No tasks found.</div>;
 
     return (
@@ -126,7 +137,7 @@ export default function TaskTree({ tasks, users, onEdit, onAddSubtask }) {
                 <TaskItem
                     key={task.id}
                     task={task}
-                    users={users}
+                    projectId={projectId}
                     onEdit={onEdit}
                     onAddSubtask={onAddSubtask}
                 />

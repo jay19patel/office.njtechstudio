@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import ProgressBar from './ProgressBar';
 
 export default function ProjectList({ projects }) {
     if (!projects || projects.length === 0) {
@@ -26,9 +27,11 @@ export default function ProjectList({ projects }) {
                             </span>
                         </div>
 
-                        <div className="flex justify-between items-center text-sm text-gray-400 pt-4 border-t border-gray-50">
-                            <span>{project.tasks?.length || 0} Tasks</span>
-                            <span className="text-blue-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">View Details →</span>
+                        <div className="mt-4 pt-4 border-t border-gray-50">
+                            <ProgressBar tasks={project.tasks} />
+                        </div>
+                        <div className="flex justify-end mt-2">
+                            <span className="text-blue-500 text-xs font-medium opacity-0 group-hover:opacity-100 transition-all">View Details →</span>
                         </div>
                     </div>
                 </Link>

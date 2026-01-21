@@ -11,8 +11,7 @@ export default function Sidebar() {
     const menuItems = [
         { name: "Dashboard", icon: <HomeIcon />, href: "/" },
         { name: "Projects", icon: <FolderIcon />, href: "/projects" },
-        { name: "Users", icon: <UsersIcon />, href: "/users" },
-        { name: "Bugs", icon: <BugIcon />, href: "/bugs" },
+        { name: "Tasks", icon: <ClipboardListIcon />, href: "/tasks" },
     ];
 
     return (
@@ -64,19 +63,24 @@ export default function Sidebar() {
                 ))}
             </nav>
 
-            {/* User Footer */}
+            {/* Footer / Settings */}
             <div className="p-4 border-t border-gray-100">
-                <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs">
-                        JP
+                <Link
+                    href="/settings"
+                    className={`flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${pathname === '/settings' ? "bg-purple-50 text-purple-700 font-medium" : ""
+                        }`}
+                >
+                    <div className={`flex-shrink-0 ${isCollapsed ? "mx-auto" : "mr-3"}`}>
+                        <CogIcon />
                     </div>
-                    {!isCollapsed && (
-                        <div className="flex-1 overflow-hidden">
-                            <p className="text-sm font-medium text-gray-900 truncate">Jay Patel</p>
-                            <p className="text-xs text-gray-500 truncate">jay@njtech.studio</p>
-                        </div>
-                    )}
-                </div>
+                    {!isCollapsed && <span className="truncate">Settings</span>}
+                </Link>
+
+                {!isCollapsed && (
+                    <div className="mt-4 px-3 text-xs text-gray-400 font-medium pt-4 border-t border-dashed border-gray-100">
+                        Developed by <span className="text-gray-600">NJ Tech Studio</span>
+                    </div>
+                )}
             </div>
         </aside>
     );
@@ -115,13 +119,6 @@ function BugIcon() {
     );
 }
 
-function UsersIcon() {
-    return (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-    );
-}
 
 function CalendarIcon() {
     return (

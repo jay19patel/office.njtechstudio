@@ -1,36 +1,4 @@
 {
-  "users": [
-    {
-      "id": "u1",
-      "name": "Sarah Jenkins",
-      "role": "Product Manager",
-      "avatar": "https://i.pravatar.cc/150?u=u1"
-    },
-    {
-      "id": "u2",
-      "name": "Mike Chen",
-      "role": "Frontend Lead",
-      "avatar": "https://i.pravatar.cc/150?u=u2"
-    },
-    {
-      "id": "u3",
-      "name": "Jessica Lee",
-      "role": "UI/UX Designer",
-      "avatar": "https://i.pravatar.cc/150?u=u3"
-    },
-    {
-      "id": "u4",
-      "name": "David Ross",
-      "role": "Backend Developer",
-      "avatar": "https://i.pravatar.cc/150?u=u4"
-    },
-    {
-      "id": "u5",
-      "name": "Emily White",
-      "role": "QA Engineer",
-      "avatar": "https://i.pravatar.cc/150?u=u5"
-    }
-  ],
   "sprints": [
     {
       "id": "s1",
@@ -66,23 +34,23 @@
           "title": "Shopping Cart Overhaul",
           "type": "Epic",
           "status": "In Progress",
-          "assigneeId": "u1",
+          "assigneeId": null,
           "sprintId": "s2",
           "subtasks": [
             {
               "id": "st1",
               "title": "Cart State Management",
               "type": "Story",
-              "status": "Done",
-              "assigneeId": "u2",
+              "status": "Completed",
+              "assigneeId": null,
               "sprintId": "s1",
               "subtasks": [
                 {
                   "id": "t1",
                   "title": "Setup Redux Toolkit",
                   "type": "Task",
-                  "status": "Done",
-                  "assigneeId": "u2",
+                  "status": "Completed",
+                  "assigneeId": null,
                   "sprintId": "s1",
                   "subtasks": []
                 }
@@ -93,7 +61,7 @@
               "title": "Checkout Flow UI",
               "type": "Story",
               "status": "In Progress",
-              "assigneeId": "u2",
+              "assigneeId": null,
               "sprintId": "s2",
               "subtasks": [
                 {
@@ -101,7 +69,7 @@
                   "title": "Implement Address Form",
                   "type": "Task",
                   "status": "In Progress",
-                  "assigneeId": "u2",
+                  "assigneeId": null,
                   "sprintId": "s2",
                   "subtasks": []
                 },
@@ -109,8 +77,8 @@
                   "id": "bug1",
                   "title": "Validation Error on Zip Code",
                   "type": "Bug",
-                  "status": "Todo",
-                  "assigneeId": "u2",
+                  "status": "Pending",
+                  "assigneeId": null,
                   "sprintId": "s2",
                   "subtasks": []
                 }
@@ -122,8 +90,8 @@
           "id": "ep2",
           "title": "Payment Integration",
           "type": "Epic",
-          "status": "Todo",
-          "assigneeId": "u4",
+          "status": "Pending",
+          "assigneeId": null,
           "sprintId": null,
           "subtasks": [
             {
@@ -131,7 +99,7 @@
               "title": "Stripe Webhook Failure",
               "type": "Bug",
               "status": "In Progress",
-              "assigneeId": "u4",
+              "assigneeId": null,
               "sprintId": "s2",
               "subtasks": []
             }
@@ -149,16 +117,16 @@
           "id": "ep3",
           "title": "Authentication Module",
           "type": "Epic",
-          "status": "Done",
-          "assigneeId": "u1",
+          "status": "Completed",
+          "assigneeId": null,
           "sprintId": "s1",
           "subtasks": [
             {
               "id": "bug3",
               "title": "Login Redirect Loop",
               "type": "Bug",
-              "status": "Done",
-              "assigneeId": "u4",
+              "status": "Completed",
+              "assigneeId": null,
               "sprintId": "s1",
               "subtasks": []
             }
@@ -168,8 +136,8 @@
           "id": "ep4",
           "title": "Data Visualization",
           "type": "Epic",
-          "status": "Todo",
-          "assigneeId": "u3",
+          "status": "Pending",
+          "assigneeId": null,
           "sprintId": "s3",
           "subtasks": []
         }
@@ -186,15 +154,15 @@
           "title": "Hero Section Animation",
           "type": "Story",
           "status": "In Progress",
-          "assigneeId": "u3",
+          "assigneeId": null,
           "sprintId": "s2",
           "subtasks": [
             {
               "id": "bug4",
               "title": "Animation Jank on Mobile",
               "type": "Bug",
-              "status": "Todo",
-              "assigneeId": "u5",
+              "status": "Pending",
+              "assigneeId": null,
               "sprintId": "s2",
               "subtasks": []
             }

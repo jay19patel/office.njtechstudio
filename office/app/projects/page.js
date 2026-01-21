@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import ProjectList from '@/components/ProjectList';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-
+import StatusCard from '@/components/StatusCard';
 export default function ProjectsPage() {
     const [data, setData] = useState(null);
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetch('/api/data').then(r => r.json()).then(setData);
@@ -14,15 +16,83 @@ export default function ProjectsPage() {
 
     if (!data) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
 
+    const projects = data.projects;
+    const filteredProjects = projects.filter(p => {
+        const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
+        const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.description.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesStatus && matchesSearch;
+    });
+
     return (
         <DashboardLayout>
             <Link href="/" className="text-gray-500 hover:text-blue-600 text-sm font-medium transition-colors mb-6 inline-block">← Back to Dashboard</Link>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">All Projects</h1>
-                {/* Add Project Button could go here */}
-            </div>
 
-            <ProjectList projects={data.projects} />
+            <header className="mb-8">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-3xl font-bold text-gray-900">All Projects</h1>
+                    <Link
+                        href="/projects/new"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm font-medium"
+                    >
+                        + New Project
+                    </Link>
+                </div>
+
+                {/* Project Stats */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <StatusCard
+                        label="Planning"
+                        count={projects.filter(p => p.status === 'Planning').length}
+                        type="purple"
+                        subtext="Projects"
+                        isActive={statusFilter === 'All' || statusFilter === 'Planning'}
+                        onClick={() => setStatusFilter(statusFilter === 'Planning' ? 'All' : 'Planning')}
+                    />
+                    <StatusCard
+                        label="In Progress"
+                        count={projects.filter(p => p.status === 'In Progress').length}
+                        type="info"
+                        subtext="Projects"
+                        isActive={statusFilter === 'All' || statusFilter === 'In Progress'}
+                        onClick={() => setStatusFilter(statusFilter === 'In Progress' ? 'All' : 'In Progress')}
+                    />
+                    <StatusCard
+                        label="On Hold"
+                        count={projects.filter(p => p.status === 'On Hold').length}
+                        type="warning"
+                        subtext="Projects"
+                        isActive={statusFilter === 'All' || statusFilter === 'On Hold'}
+                        onClick={() => setStatusFilter(statusFilter === 'On Hold' ? 'All' : 'On Hold')}
+                    />
+                    <StatusCard
+                        label="Completed"
+                        count={projects.filter(p => p.status === 'Completed').length}
+                        type="success"
+                        subtext="Projects"
+                        isActive={statusFilter === 'All' || statusFilter === 'Completed'}
+                        onClick={() => setStatusFilter(statusFilter === 'Completed' ? 'All' : 'Completed')}
+                    />
+                </div>
+
+                {/* Search */}
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        className="w-full bg-white border border-gray-200 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        placeholder="Search projects..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+            </header>
+
+            <ProjectList projects={filteredProjects} />
         </DashboardLayout>
     );
 }

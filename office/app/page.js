@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from "../components/DashboardLayout";
 import DashboardStats from '@/components/DashboardStats';
 import ProjectList from '@/components/ProjectList';
-import UserProgressList from '@/components/UserProgressList';
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -73,7 +72,6 @@ export default function Home() {
   }
 
   const stats = {
-    totalUsers: data?.users?.length || 0,
     totalProjects: data?.projects?.length || 0,
     totalTasks,
     openTasks,
@@ -94,18 +92,13 @@ export default function Home() {
         <DashboardStats stats={stats} />
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left: Projects (2 cols) */}
-          <div className="xl:col-span-2">
+        <div className="grid grid-cols-1 gap-8">
+          {/* Projects (Full Width) */}
+          <div className="col-span-1">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 border-l-4 border-blue-500 pl-3">Active Projects</h3>
             </div>
             <ProjectList projects={data?.projects} />
-          </div>
-
-          {/* Right: Team Performance (1 col) */}
-          <div className="xl:col-span-1">
-            <UserProgressList users={data?.users || []} projects={data?.projects || []} />
           </div>
         </div>
 
