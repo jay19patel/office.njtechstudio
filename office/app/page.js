@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from "../components/DashboardLayout";
 import DashboardStats from '@/components/DashboardStats';
 import ProjectList from '@/components/ProjectList';
+import VisualAnalytics from '@/components/VisualAnalytics';
+import { isDelayed } from '@/utils/timeUtils';
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -38,36 +40,53 @@ export default function Home() {
   }
 
   // Calculate stats
+  // Returns { total, open, bugs, delayed }
   const countTasks = (tasks = []) => {
     let count = 0;
     let openCount = 0;
     let bugCount = 0;
+    let delayedCount = 0;
+
     tasks.forEach(task => {
       count++;
       if (task.type === 'Bug') bugCount++;
       if (task.status !== 'Done' && task.status !== 'Completed') {
         openCount++;
       }
+
+      // Check delay
+      if (isDelayed(task.startDate, task.endDate, task.status)) {
+        delayedCount++;
+      }
+
       if (task.subtasks) {
-        const { total, open, bugs } = countTasks(task.subtasks);
+        const { total, open, bugs, delayed } = countTasks(task.subtasks);
         count += total;
         openCount += open;
         bugCount += bugs;
+        delayedCount += delayed;
       }
     });
-    return { total: count, open: openCount, bugs: bugCount };
+    return { total: count, open: openCount, bugs: bugCount, delayed: delayedCount };
   };
 
   let totalTasks = 0;
   let openTasks = 0;
   let totalBugs = 0;
+  let totalCritical = 0;
 
   if (data?.projects) {
     data.projects.forEach(p => {
-      const { total, open, bugs } = countTasks(p.tasks);
+      const { total, open, bugs, delayed } = countTasks(p.tasks);
       totalTasks += total;
       openTasks += open;
       totalBugs += bugs;
+      totalCritical += delayed;
+
+      // Also check if project itself is delayed
+      if (isDelayed(p.startDate, p.endDate, p.status)) {
+        totalCritical++;
+      }
     });
   }
 
@@ -75,7 +94,8 @@ export default function Home() {
     totalProjects: data?.projects?.length || 0,
     totalTasks,
     openTasks,
-    totalBugs
+    totalBugs,
+    totalCritical
   };
 
   return (
@@ -91,16 +111,8 @@ export default function Home() {
         {/* Stats Grid */}
         <DashboardStats stats={stats} />
 
-        {/* Main Content Area */}
-        <div className="grid grid-cols-1 gap-8">
-          {/* Projects (Full Width) */}
-          <div className="col-span-1">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900 border-l-4 border-blue-500 pl-3">Active Projects</h3>
-            </div>
-            <ProjectList projects={data?.projects} />
-          </div>
-        </div>
+        {/* Analytics Graphs */}
+        <VisualAnalytics projects={data?.projects} />
 
       </div>
     </DashboardLayout>

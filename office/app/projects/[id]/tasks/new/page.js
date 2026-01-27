@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import TaskForm from '@/components/TaskForm';
@@ -9,6 +9,10 @@ import TaskForm from '@/components/TaskForm';
 export default function NewTaskPage() {
     const router = useRouter();
     const { id } = useParams(); // Project ID
+    const searchParams = useSearchParams();
+    const parentId = searchParams.get('parentId');
+    const typeParam = searchParams.get('type') || 'Task';
+
     const [loading, setLoading] = useState(false);
 
     const handleCreate = async (formData) => {
@@ -29,9 +33,29 @@ export default function NewTaskPage() {
                 ...formData
             };
 
-            // Add to root of project tasks for simplicity in this view
-            // (If we supported adding subtasks via this page, we'd need a parentId param)
-            data.projects[projectIndex].tasks.push(newTask);
+            if (parentId) {
+                // Add as subtask
+                const addTaskRecursive = (tasks) => {
+                    for (let i = 0; i < tasks.length; i++) {
+                        if (tasks[i].id === parentId) {
+                            if (!tasks[i].subtasks) tasks[i].subtasks = [];
+                            tasks[i].subtasks.push(newTask);
+                            return true;
+                        }
+                        if (tasks[i].subtasks && addTaskRecursive(tasks[i].subtasks)) return true;
+                    }
+                    return false;
+                };
+
+                const found = addTaskRecursive(data.projects[projectIndex].tasks);
+                if (!found) {
+                    console.error("Parent task not found, adding to root");
+                    data.projects[projectIndex].tasks.push(newTask);
+                }
+            } else {
+                // Add to root
+                data.projects[projectIndex].tasks.push(newTask);
+            }
 
             await fetch('/api/data', {
                 method: 'POST',
@@ -54,10 +78,17 @@ export default function NewTaskPage() {
                     ← Back to Project
                 </Link>
 
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">Create New Task</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-8">
+                    {parentId ? 'Create New Subtask' : 'Create New Task'}
+                </h1>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                    <TaskForm onSubmit={handleCreate} loading={loading} buttonText="Create Task" />
+                    <TaskForm
+                        initialData={{ type: typeParam }}
+                        onSubmit={handleCreate}
+                        loading={loading}
+                        buttonText="Create Task"
+                    />
                 </div>
             </div>
         </DashboardLayout>

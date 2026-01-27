@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { isDelayed, calculateDuration } from '@/utils/timeUtils';
 
 const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
     const [expanded, setExpanded] = useState(false);
     const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+    const delayed = isDelayed(task.startDate, task.endDate, task.status);
+    const duration = calculateDuration(task.startDate, task.endDate);
 
     // Determine Project ID for linking
     // If task has projectId (flat list), use it. Otherwise use prop (heirarchical list)
@@ -34,11 +38,21 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
             <div
                 className={`
           flex items-center justify-between p-3 rounded-lg
-          bg-white hover:bg-gray-50 transition-colors border border-gray-100 shadow-sm
+          bg-white hover:bg-gray-50 transition-colors border shadow-sm relative
           ${depth > 0 ? 'ml-6 border-l-4 border-l-gray-300' : ''}
+          ${delayed ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-100'}
         `}
                 style={{ marginLeft: `${depth * 1.5}rem` }}
             >
+                {delayed && (
+                    <div className="absolute top-0 right-0 -mr-2 -mt-2 z-10">
+                        <span className="relative flex h-4 w-4">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-[8px] items-center justify-center font-bold">!</span>
+                        </span>
+                    </div>
+                )}
+
                 <div className="flex items-center gap-3">
                     {hasSubtasks ? (
                         <button
@@ -63,7 +77,7 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
                             </span>
                             {activeProjectId ? (
                                 <Link
-                                    href={`/projects/${activeProjectId}/tasks/${task.id}`}
+                                    href={`/projects/${activeProjectId}/tasks/${task.id}/edit`} // Default to edit page on title click
                                     className="font-medium text-gray-900 text-sm hover:text-blue-600 hover:underline"
                                 >
                                     {task.title}
@@ -72,6 +86,12 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
                                 <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
                             )}
                         </div>
+                        {task.startDate && task.endDate && (
+                            <div className="text-[10px] text-gray-400 mt-0.5 ml-1 flex gap-2">
+                                <span>{new Date(task.startDate).toLocaleDateString()} - {new Date(task.endDate).toLocaleDateString()}</span>
+                                {duration && <span className="font-medium text-gray-500">({duration})</span>}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -95,10 +115,10 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
                         )}
                         {onAddSubtask && activeProjectId && (
                             <Link
-                                href={`/projects/${activeProjectId}/tasks/new`} // Simplified: Redirect to new task page, though ideally we'd pass parentId. For now just generic new task.
+                                href={`/projects/${activeProjectId}/tasks/new?parentId=${task.id}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="p-1.5 rounded hover:bg-green-100 text-green-500 transition-colors"
-                                title="Add Subtask (Note: Adds to root currently)"
+                                title="Add Subtask"
                             >
                                 +
                             </Link>
@@ -125,8 +145,6 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
         </div>
     );
 };
-
-import Link from 'next/link';
 
 export default function TaskTree({ tasks, projectId, onEdit, onAddSubtask }) {
     if (!tasks || tasks.length === 0) return <div className="text-gray-500 italic p-4 text-sm">No tasks found.</div>;

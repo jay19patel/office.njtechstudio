@@ -2,19 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import TaskTree from '@/components/TaskTree';
 import StatusCard from '@/components/StatusCard';
+import { isDelayed } from '@/utils/timeUtils';
 
 export default function TasksPage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Filters
-    const [filterType, setFilterType] = useState('All');
-    const [filterStatus, setFilterStatus] = useState('All');
-    const [filterProject, setFilterProject] = useState('All');
-    const [searchQuery, setSearchQuery] = useState('');
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Filters from URL
+    const filterType = searchParams.get('type') || 'All';
+    const filterStatus = searchParams.get('status') || 'All';
+    const filterProject = searchParams.get('project') || 'All';
+    const searchQuery = searchParams.get('q') || '';
+    const isCritical = searchParams.get('critical') === 'true';
 
     useEffect(() => {
         fetch('/api/data')
@@ -25,23 +31,26 @@ export default function TasksPage() {
             });
     }, []);
 
+    const updateParams = (updates) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value && value !== 'All' && value !== false) {
+                params.set(key, value);
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/tasks?${params.toString()}`);
+    };
+
     if (loading) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
 
-    // Flatten tasks from all projects
+    // 1. Flatten ALL tasks from all projects (Raw Data)
     const getAllTasks = () => {
-        const tasks = [];
+        const flattened = [];
         const traverse = (taskList, projectTitle, projectId) => {
             taskList.forEach(task => {
-                // Apply Filters
-                const matchType = filterType === 'All' || task.type === filterType;
-                const matchStatus = filterStatus === 'All' || task.status === filterStatus;
-                const matchProject = filterProject === 'All' || projectId === filterProject;
-                const matchSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
-
-                if (matchType && matchStatus && matchProject && matchSearch) {
-                    tasks.push({ ...task, projectTitle, projectId });
-                }
-
+                flattened.push({ ...task, projectTitle, projectId });
                 if (task.subtasks) traverse(task.subtasks, projectTitle, projectId);
             });
         };
@@ -49,10 +58,37 @@ export default function TasksPage() {
         if (data && data.projects) {
             data.projects.forEach(p => traverse(p.tasks, p.title, p.id));
         }
-        return tasks;
+        return flattened;
     };
 
-    const tasks = getAllTasks();
+    const allTasks = getAllTasks();
+
+    // 2. Apply Filters to Create Display List
+    const filteredTasks = allTasks.filter(task => {
+        const matchType = filterType === 'All' || task.type === filterType;
+        const matchStatus = filterStatus === 'All' || task.status === filterStatus;
+        const matchProject = filterProject === 'All' || task.projectId === filterProject;
+        const matchSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const delayed = isDelayed(task.startDate, task.endDate, task.status);
+
+        // Critical Filter Logic
+        // If critical param is true, ONLY show delayed tasks.
+        // If critical param is NOT true, show all (subject to other filters).
+        // The user didn't ask to EXCLUDE criticals, but to specifically VIEW them.
+        const matchCritical = !isCritical || delayed;
+
+        return matchType && matchStatus && matchProject && matchSearch && matchCritical;
+    });
+
+    // 3. Counts for Cards (Calculated from ALL tasks, not filtered ones)
+    const counts = {
+        pending: allTasks.filter(t => t.status === 'Pending').length,
+        inProgress: allTasks.filter(t => t.status === 'In Progress').length,
+        brainstorming: allTasks.filter(t => t.status === 'Brainstorming').length,
+        completed: allTasks.filter(t => t.status === 'Completed').length,
+        critical: allTasks.filter(t => isDelayed(t.startDate, t.endDate, t.status)).length
+    };
 
     return (
         <DashboardLayout>
@@ -72,38 +108,46 @@ export default function TasksPage() {
                 </div>
 
                 {/* Status Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     <StatusCard
                         label="Pending"
-                        count={tasks.filter(t => t.status === 'Pending').length}
+                        count={counts.pending}
                         type="warning"
                         subtext="Tasks"
-                        isActive={filterStatus === 'All' || filterStatus === 'Pending'}
-                        onClick={() => setFilterStatus(filterStatus === 'Pending' ? 'All' : 'Pending')}
+                        isActive={!isCritical && filterStatus === 'Pending'}
+                        onClick={() => updateParams({ status: filterStatus === 'Pending' ? 'All' : 'Pending', critical: false })}
                     />
                     <StatusCard
                         label="In Progress"
-                        count={tasks.filter(t => t.status === 'In Progress').length}
+                        count={counts.inProgress}
                         type="info"
                         subtext="Tasks"
-                        isActive={filterStatus === 'All' || filterStatus === 'In Progress'}
-                        onClick={() => setFilterStatus(filterStatus === 'In Progress' ? 'All' : 'In Progress')}
+                        isActive={!isCritical && filterStatus === 'In Progress'}
+                        onClick={() => updateParams({ status: filterStatus === 'In Progress' ? 'All' : 'In Progress', critical: false })}
                     />
                     <StatusCard
                         label="Brainstorming"
-                        count={tasks.filter(t => t.status === 'Brainstorming').length}
+                        count={counts.brainstorming}
                         type="purple"
                         subtext="Tasks"
-                        isActive={filterStatus === 'All' || filterStatus === 'Brainstorming'}
-                        onClick={() => setFilterStatus(filterStatus === 'Brainstorming' ? 'All' : 'Brainstorming')}
+                        isActive={!isCritical && filterStatus === 'Brainstorming'}
+                        onClick={() => updateParams({ status: filterStatus === 'Brainstorming' ? 'All' : 'Brainstorming', critical: false })}
                     />
                     <StatusCard
                         label="Completed"
-                        count={tasks.filter(t => t.status === 'Completed').length}
+                        count={counts.completed}
                         type="success"
                         subtext="Tasks"
-                        isActive={filterStatus === 'All' || filterStatus === 'Completed'}
-                        onClick={() => setFilterStatus(filterStatus === 'Completed' ? 'All' : 'Completed')}
+                        isActive={!isCritical && filterStatus === 'Completed'}
+                        onClick={() => updateParams({ status: filterStatus === 'Completed' ? 'All' : 'Completed', critical: false })}
+                    />
+                    <StatusCard
+                        label="Critical"
+                        count={counts.critical}
+                        type="red"
+                        subtext="Alerts"
+                        isActive={isCritical}
+                        onClick={() => updateParams({ critical: isCritical ? false : 'true', status: 'All' })}
                     />
                 </div>
             </header>
@@ -121,15 +165,15 @@ export default function TasksPage() {
                         className="w-full bg-white border border-gray-200 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                         placeholder="Search tasks..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => updateParams({ q: e.target.value })}
                     />
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-wrap">
                     <select
                         className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
+                        onChange={(e) => updateParams({ type: e.target.value })}
                     >
                         <option value="All">All Types</option>
                         <option value="Epic">Epic</option>
@@ -141,7 +185,7 @@ export default function TasksPage() {
                     <select
                         className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
+                        onChange={(e) => updateParams({ status: e.target.value })}
                     >
                         <option value="All">All Statuses</option>
                         <option value="Pending">Pending</option>
@@ -153,7 +197,7 @@ export default function TasksPage() {
                     <select
                         className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={filterProject}
-                        onChange={(e) => setFilterProject(e.target.value)}
+                        onChange={(e) => updateParams({ project: e.target.value })}
                     >
                         <option value="All">All Projects</option>
                         {data?.projects?.map(p => (
@@ -163,13 +207,13 @@ export default function TasksPage() {
                 </div>
             </div>
 
-            {tasks.length === 0 ? (
+            {filteredTasks.length === 0 ? (
                 <div className="p-10 bg-gray-50 text-gray-500 rounded-xl border border-gray-200 text-center">
                     No tasks found matching your filters.
                 </div>
             ) : (
                 <div className="">
-                    {tasks.map(task => (
+                    {filteredTasks.map(task => (
                         <div key={task.id} className="border-b border-gray-100 last:border-0 p-4 hover:bg-blue-50/10 transition-colors">
                             <div className="flex justify-between items-start mb-2">
                                 <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">

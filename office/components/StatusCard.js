@@ -1,12 +1,15 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function StatusCard({
     label,
     count,
     subtext = "Items",
     isActive = true,
     onClick,
-    type = 'default' // 'default' | 'success' | 'warning' | 'info' | 'purple'
+    href,
+    type = 'default'
 }) {
 
     const getColors = () => {
@@ -71,19 +74,9 @@ export default function StatusCard({
     };
 
     const colors = getColors();
-    const Component = onClick ? 'button' : 'div';
 
-    return (
-        <Component
-            onClick={onClick}
-            className={`
-                w-full text-left p-6 rounded-2xl border border-gray-100 transition-all duration-200 relative overflow-hidden group
-                ${isActive ? 'opacity-100 shadow-sm' : 'opacity-40 hover:opacity-70'}
-                ${isActive && onClick ? 'hover:shadow-md' : ''}
-                ${isActive && onClick && count > -1 ? `ring-2 ${colors.ring} ring-opacity-0 hover:ring-opacity-50` : ''} 
-                bg-white
-            `}
-        >
+    const CardContent = (
+        <>
             {/* Decorative Background Blob */}
             <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-0 group-hover:opacity-10 transition-opacity ${colors.bg.replace('bg-', 'bg-current text-')}`} />
 
@@ -95,6 +88,36 @@ export default function StatusCard({
                 <span className="text-3xl font-bold text-gray-900">{count}</span>
                 {subtext && <span className="text-xs text-gray-400 font-medium">{subtext}</span>}
             </div>
-        </Component>
+        </>
+    );
+
+    const baseClass = `
+        w-full text-left p-6 rounded-2xl border border-gray-100 transition-all duration-200 relative overflow-hidden group
+        ${isActive ? 'opacity-100 shadow-sm' : 'opacity-40 hover:opacity-70'}
+        ${isActive ? 'hover:shadow-md' : ''}
+        ${isActive && count > -1 ? `ring-2 ${colors.ring} ring-opacity-0 hover:ring-opacity-50` : ''} 
+        bg-white block
+    `;
+
+    if (href) {
+        return (
+            <Link href={href} className={baseClass}>
+                {CardContent}
+            </Link>
+        );
+    }
+
+    if (onClick) {
+        return (
+            <button onClick={onClick} className={baseClass}>
+                {CardContent}
+            </button>
+        );
+    }
+
+    return (
+        <div className={baseClass}>
+            {CardContent}
+        </div>
     );
 }

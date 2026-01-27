@@ -3,16 +3,33 @@
 import { useState, useEffect } from 'react';
 import ProjectList from '@/components/ProjectList';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusCard from '@/components/StatusCard';
+
 export default function ProjectsPage() {
     const [data, setData] = useState(null);
-    const [statusFilter, setStatusFilter] = useState('All');
-    const [searchQuery, setSearchQuery] = useState('');
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const statusFilter = searchParams.get('status') || 'All';
+    const searchQuery = searchParams.get('q') || '';
 
     useEffect(() => {
         fetch('/api/data').then(r => r.json()).then(setData);
     }, []);
+
+    const updateParams = (updates) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value && value !== 'All') {
+                params.set(key, value);
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/projects?${params.toString()}`);
+    };
 
     if (!data) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
 
@@ -47,7 +64,7 @@ export default function ProjectsPage() {
                         type="purple"
                         subtext="Projects"
                         isActive={statusFilter === 'All' || statusFilter === 'Planning'}
-                        onClick={() => setStatusFilter(statusFilter === 'Planning' ? 'All' : 'Planning')}
+                        onClick={() => updateParams({ status: statusFilter === 'Planning' ? 'All' : 'Planning' })}
                     />
                     <StatusCard
                         label="In Progress"
@@ -55,7 +72,7 @@ export default function ProjectsPage() {
                         type="info"
                         subtext="Projects"
                         isActive={statusFilter === 'All' || statusFilter === 'In Progress'}
-                        onClick={() => setStatusFilter(statusFilter === 'In Progress' ? 'All' : 'In Progress')}
+                        onClick={() => updateParams({ status: statusFilter === 'In Progress' ? 'All' : 'In Progress' })}
                     />
                     <StatusCard
                         label="On Hold"
@@ -63,7 +80,7 @@ export default function ProjectsPage() {
                         type="warning"
                         subtext="Projects"
                         isActive={statusFilter === 'All' || statusFilter === 'On Hold'}
-                        onClick={() => setStatusFilter(statusFilter === 'On Hold' ? 'All' : 'On Hold')}
+                        onClick={() => updateParams({ status: statusFilter === 'On Hold' ? 'All' : 'On Hold' })}
                     />
                     <StatusCard
                         label="Completed"
@@ -71,7 +88,7 @@ export default function ProjectsPage() {
                         type="success"
                         subtext="Projects"
                         isActive={statusFilter === 'All' || statusFilter === 'Completed'}
-                        onClick={() => setStatusFilter(statusFilter === 'Completed' ? 'All' : 'Completed')}
+                        onClick={() => updateParams({ status: statusFilter === 'Completed' ? 'All' : 'Completed' })}
                     />
                 </div>
 
@@ -87,7 +104,7 @@ export default function ProjectsPage() {
                         className="w-full bg-white border border-gray-200 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                         placeholder="Search projects..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => updateParams({ q: e.target.value })}
                     />
                 </div>
             </header>
