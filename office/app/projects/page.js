@@ -33,7 +33,11 @@ export default function ProjectsPage() {
 
     if (!data) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
 
-    const projects = data.projects;
+    if (data.error) {
+        return <DashboardLayout><div className="p-10 text-red-500">Error loading data: {data.error}</div></DashboardLayout>;
+    }
+
+    const projects = data.projects || [];
     const filteredProjects = projects.filter(p => {
         const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
         const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -109,7 +113,40 @@ export default function ProjectsPage() {
                 </div>
             </header>
 
-            <ProjectList projects={filteredProjects} />
+            {filteredProjects.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                    </div>
+                    {projects.length === 0 ? (
+                        <>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">No Projects Yet</h3>
+                            <p className="text-gray-500 mb-6 max-w-sm mx-auto">Get started by creating your first project to organize tasks and sprints.</p>
+                            <Link
+                                href="/projects/new"
+                                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors shadow-md font-medium inline-block"
+                            >
+                                + Create First Project
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">No Matching Projects</h3>
+                            <p className="text-gray-500 mb-6">Try adjusting your search or filters.</p>
+                            <button
+                                onClick={() => updateParams({ q: '', status: 'All' })}
+                                className="text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                                Clear Filters
+                            </button>
+                        </>
+                    )}
+                </div>
+            ) : (
+                <ProjectList projects={filteredProjects} />
+            )}
         </DashboardLayout>
     );
 }

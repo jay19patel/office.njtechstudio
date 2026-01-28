@@ -114,7 +114,7 @@ export default function TasksPage() {
                         count={counts.pending}
                         type="warning"
                         subtext="Tasks"
-                        isActive={!isCritical && filterStatus === 'Pending'}
+                        isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Pending')}
                         onClick={() => updateParams({ status: filterStatus === 'Pending' ? 'All' : 'Pending', critical: false })}
                     />
                     <StatusCard
@@ -122,7 +122,7 @@ export default function TasksPage() {
                         count={counts.inProgress}
                         type="info"
                         subtext="Tasks"
-                        isActive={!isCritical && filterStatus === 'In Progress'}
+                        isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'In Progress')}
                         onClick={() => updateParams({ status: filterStatus === 'In Progress' ? 'All' : 'In Progress', critical: false })}
                     />
                     <StatusCard
@@ -130,7 +130,7 @@ export default function TasksPage() {
                         count={counts.brainstorming}
                         type="purple"
                         subtext="Tasks"
-                        isActive={!isCritical && filterStatus === 'Brainstorming'}
+                        isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Brainstorming')}
                         onClick={() => updateParams({ status: filterStatus === 'Brainstorming' ? 'All' : 'Brainstorming', critical: false })}
                     />
                     <StatusCard
@@ -138,7 +138,7 @@ export default function TasksPage() {
                         count={counts.completed}
                         type="success"
                         subtext="Tasks"
-                        isActive={!isCritical && filterStatus === 'Completed'}
+                        isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Completed')}
                         onClick={() => updateParams({ status: filterStatus === 'Completed' ? 'All' : 'Completed', critical: false })}
                     />
                     <StatusCard
@@ -146,7 +146,7 @@ export default function TasksPage() {
                         count={counts.critical}
                         type="red"
                         subtext="Alerts"
-                        isActive={isCritical}
+                        isActive={isCritical || (filterStatus === 'All' && !isCritical)}
                         onClick={() => updateParams({ critical: isCritical ? false : 'true', status: 'All' })}
                     />
                 </div>
