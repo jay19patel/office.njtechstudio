@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function NotesPage() {
+function NotesContent() {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const searchParams = useSearchParams();
@@ -43,7 +43,7 @@ export default function NotesPage() {
     };
 
     return (
-        <DashboardLayout>
+        <div className="flex flex-col h-full">
             <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">My Notes</h1>
@@ -115,6 +115,16 @@ export default function NotesPage() {
                     ))}
                 </div>
             )}
+        </div>
+    );
+}
+
+export default function NotesPage() {
+    return (
+        <DashboardLayout>
+            <Suspense fallback={<div className="p-8 text-center text-gray-500">Loading notes...</div>}>
+                <NotesContent />
+            </Suspense>
         </DashboardLayout>
     );
 }

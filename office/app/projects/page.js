@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import ProjectList from '@/components/ProjectList';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusCard from '@/components/StatusCard';
 
-export default function ProjectsPage() {
+function ProjectsContent() {
     const [data, setData] = useState(null);
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -31,10 +31,10 @@ export default function ProjectsPage() {
         router.push(`/projects?${params.toString()}`);
     };
 
-    if (!data) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
+    if (!data) return <div className="p-10 text-gray-500">Loading...</div>;
 
     if (data.error) {
-        return <DashboardLayout><div className="p-10 text-red-500">Error loading data: {data.error}</div></DashboardLayout>;
+        return <div className="p-10 text-red-500">Error loading data: {data.error}</div>;
     }
 
     const projects = data.projects || [];
@@ -46,7 +46,7 @@ export default function ProjectsPage() {
     });
 
     return (
-        <DashboardLayout>
+        <>
             <Link href="/" className="text-gray-500 hover:text-blue-600 text-sm font-medium transition-colors mb-6 inline-block">← Back to Dashboard</Link>
 
             <header className="mb-8">
@@ -147,6 +147,16 @@ export default function ProjectsPage() {
             ) : (
                 <ProjectList projects={filteredProjects} />
             )}
+        </>
+    );
+}
+
+export default function ProjectsPage() {
+    return (
+        <DashboardLayout>
+            <Suspense fallback={<div className="p-10 text-gray-500">Loading...</div>}>
+                <ProjectsContent />
+            </Suspense>
         </DashboardLayout>
     );
 }

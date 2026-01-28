@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -8,7 +8,7 @@ import TaskTree from '@/components/TaskTree';
 import StatusCard from '@/components/StatusCard';
 import { isDelayed } from '@/utils/timeUtils';
 
-export default function TasksPage() {
+function TasksContent() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -43,7 +43,7 @@ export default function TasksPage() {
         router.push(`/tasks?${params.toString()}`);
     };
 
-    if (loading) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
+    if (loading) return <div className="p-10 text-gray-500">Loading...</div>;
 
     // 1. Flatten ALL tasks from all projects (Raw Data)
     const getAllTasks = () => {
@@ -91,7 +91,7 @@ export default function TasksPage() {
     };
 
     return (
-        <DashboardLayout>
+        <>
             <Link href="/" className="text-gray-500 hover:text-blue-600 text-sm font-medium transition-colors mb-6 inline-block">← Back to Dashboard</Link>
 
             <header className="mb-8">
@@ -228,6 +228,16 @@ export default function TasksPage() {
                     ))}
                 </div>
             )}
+        </>
+    );
+}
+
+export default function TasksPage() {
+    return (
+        <DashboardLayout>
+            <Suspense fallback={<div className="p-10 text-gray-500">Loading tasks...</div>}>
+                <TasksContent />
+            </Suspense>
         </DashboardLayout>
     );
 }
