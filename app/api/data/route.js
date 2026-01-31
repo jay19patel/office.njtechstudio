@@ -3,22 +3,22 @@ import path from 'path';
 import connectToDatabase from '@/lib/db';
 import Project from '@/models/Project';
 import Task from '@/models/Task';
-
-const dataFilePath = path.join(process.cwd(), 'data', 'data.json');
+import { cookies } from 'next/headers';
 
 // Helper to flatten task tree for DB insertion
-function flattenTasks(tasks, projectId, parentId = null) {
+function flattenTasks(tasks, projectId, parentId = null, officeId) {
     let flat = [];
     tasks.forEach(t => {
         const { subtasks, ...taskData } = t;
         const taskDoc = {
             ...taskData,
             projectId,
-            parentId
+            parentId,
+            officeId
         };
         flat.push(taskDoc);
         if (subtasks && subtasks.length > 0) {
-            flat = flat.concat(flattenTasks(subtasks, projectId, t.id));
+            flat = flat.concat(flattenTasks(subtasks, projectId, t.id, officeId));
         }
     });
     return flat;
@@ -30,9 +30,6 @@ function buildTaskTree(tasks, parentId = null) {
         .filter(t => t.parentId === parentId)
         .map(t => ({
             ...t,
-            // Recursively find subtasks. 
-            // Note: This naive 0(N^2) approach is fine for <1000 items. 
-            // For larger, we'd map by parentId first.
             subtasks: buildTaskTree(tasks, t.id)
         }));
 }
@@ -40,59 +37,27 @@ function buildTaskTree(tasks, parentId = null) {
 export async function GET() {
     try {
         await connectToDatabase();
+        const cookieStore = await cookies();
+        const officePin = cookieStore.get('officePin')?.value;
 
-        // 1. Auto-Migration Check
-        const projectCount = await Project.countDocuments();
-
-        if (projectCount === 0) {
-            try {
-                console.log("DB empty, migrating from data.json to Normalized Schema...");
-                const fileContents = await fs.readFile(dataFilePath, 'utf8');
-                const jsonData = JSON.parse(fileContents);
-
-                if (jsonData.projects) {
-                    // Insert Projects
-                    const projectsToInsert = jsonData.projects.map(p => {
-                        const { tasks, ...rest } = p;
-                        return rest;
-                    });
-                    await Project.insertMany(projectsToInsert);
-
-                    // Insert Tasks (Flattened)
-                    let allTasks = [];
-                    jsonData.projects.forEach(p => {
-                        if (p.tasks) {
-                            allTasks = allTasks.concat(flattenTasks(p.tasks, p.id));
-                        }
-                    });
-                    if (allTasks.length > 0) {
-                        await Task.insertMany(allTasks);
-                    }
-                }
-                return Response.json(jsonData);
-            } catch (err) {
-                if (err.code === 'ENOENT') {
-                    console.log("No data.json found. Starting with empty DB.");
-                    return Response.json({ projects: [], sprints: [] });
-                }
-                throw err;
-            }
+        if (!officePin) {
+            return Response.json({ projects: [], sprints: [] });
         }
 
-        // 2. Fetch Data
-        const projects = await Project.find({}).lean();
-        const allTasks = await Task.find({}).lean();
+        // 2. Fetch Data Scoped by Office
+        const projects = await Project.find({ officeId: officePin }).lean();
+        // Fetch tasks that belong to this office (or we could fetch by projectIds, but officeId is safer/easier)
+        const allTasks = await Task.find({ officeId: officePin }).lean();
 
         // 3. Reconstruct Tree
         // Clean _id and __v
         const cleanProjects = projects.map(p => {
-            const { _id, __v, ...rest } = p;
+            const { _id, __v, officeId, ...rest } = p; // remove officeId from response if strictly needed, or keep it
             return rest;
         });
 
         const cleanTasks = allTasks.map(t => {
-            const { _id, __v, projectId, parentId, ...rest } = t;
-            // We keep internal fields for reconstruction logic, but usually frontend needs 'id'
+            const { _id, __v, projectId, parentId, officeId, ...rest } = t;
             return {
                 ...rest,
                 projectId,
@@ -108,8 +73,7 @@ export async function GET() {
             p.tasks = buildTaskTree(projectTasks, null);
         });
 
-        // Return expected format (sprints empty or removed if frontend tolerates)
-        // Frontend likely checks data.sprints, so we return empty array to be safe.
+        // Return expected format
         return Response.json({
             projects: cleanProjects,
             sprints: []
@@ -124,26 +88,31 @@ export async function GET() {
 export async function POST(request) {
     try {
         await connectToDatabase();
+        const cookieStore = await cookies();
+        const officePin = cookieStore.get('officePin')?.value;
+
+        if (!officePin) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const newData = await request.json();
 
-        // 1. Upsert Projects
-        // To strictly sync: Delete All -> Insert All is simplest and safest for consistency
-        // as implemented before.
+        // 1. Upsert Projects (Scoped to Office)
         if (newData.projects) {
-            // Transaction-like sequence
-            await Project.deleteMany({});
-            await Task.deleteMany({});
+            // Transaction-like sequence for THIS office only
+            await Project.deleteMany({ officeId: officePin });
+            await Task.deleteMany({ officeId: officePin });
 
             const projectsToInsert = newData.projects.map(p => {
                 const { tasks, ...rest } = p;
-                return rest;
+                return { ...rest, officeId: officePin };
             });
             await Project.insertMany(projectsToInsert);
 
             let allTasks = [];
             newData.projects.forEach(p => {
                 if (p.tasks) {
-                    allTasks = allTasks.concat(flattenTasks(p.tasks, p.id));
+                    allTasks = allTasks.concat(flattenTasks(p.tasks, p.id, null, officePin));
                 }
             });
 

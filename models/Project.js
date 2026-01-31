@@ -23,6 +23,7 @@ const ProjectSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    officeId: { type: String, required: true, index: true },
     title: String,
     description: String,
     status: String,

@@ -1,65 +1,361 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 
 export default function SettingsPage() {
-    // Default config email or load from local storage/api in future
-    const [email, setEmail] = useState('jay@njtech.studio');
-    const [saved, setSaved] = useState(false);
+    const [currentPin, setCurrentPin] = useState('');
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [view, setView] = useState('loading'); // 'loading', 'auth', 'settings'
+    const [authMode, setAuthMode] = useState('login'); // 'login', 'register'
 
-    const handleSave = (e) => {
-        e.preventDefault();
-        // Here you would save to backend
-        console.log("Saving configuration:", { email });
+    // Auth Form State
+    const [authData, setAuthData] = useState({ pin: '', name: '', email: '' });
+    const [generatedPin, setGeneratedPin] = useState(null);
 
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+    // Settings Form State
+    const [saving, setSaving] = useState(false);
+    const [formData, setFormData] = useState({
+        officeName: '',
+        email: '',
+        officeTime: '',
+        isOnline: true
+    });
+
+    useEffect(() => {
+        checkAuth();
+    }, []);
+
+    const checkAuth = () => {
+        const match = document.cookie.match(new RegExp('(^| )officePin=([^;]+)'));
+        if (match && match[2]) {
+            setCurrentPin(match[2]);
+            setView('settings');
+            fetchSettings();
+        } else {
+            setView('auth');
+        }
     };
 
-    return (
-        <DashboardLayout>
-            <div className="max-w-xl mx-auto">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-                <p className="text-gray-500 mb-8">Manage your workspace configuration.</p>
+    const fetchSettings = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+                const data = await res.json();
+                setFormData({
+                    officeName: data.officeName || '',
+                    email: data.email || '',
+                    officeTime: data.officeTime || '',
+                    isOnline: data.isOnline !== undefined ? data.isOnline : true
+                });
+            } else {
+                // If fetch fails (e.g. invalid pin), logout
+                handleLogout();
+            }
+        } catch (error) {
+            console.error("Failed to load settings", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                    <form onSubmit={handleSave} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Configuration Email</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin: authData.pin })
+            });
+
+            if (res.ok) {
+                document.cookie = `officePin=${authData.pin}; path=/; max-age=${60 * 60 * 24 * 30}`;
+                setCurrentPin(authData.pin);
+                setView('settings');
+                fetchSettings();
+                // Force reload to update header immediately
+                window.location.href = '/settings';
+            } else {
+                alert("Invalid PIN");
+            }
+        } catch (error) {
+            alert("Login failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: authData.name, email: authData.email })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                setGeneratedPin(data.pin);
+                // Don't auto login, show pin first
+            } else {
+                alert(data.error || "Registration failed");
+            }
+        } catch (error) {
+            alert("Registration error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSaveSettings = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (res.ok) {
+                alert("Settings saved successfully!");
+                window.location.reload();
+            } else {
+                throw new Error("Failed to save");
+            }
+        } catch (error) {
+            alert("Error saving settings");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleLogout = () => {
+        document.cookie = 'officePin=; path=/; max-age=0';
+        setCurrentPin('');
+        setView('auth');
+        setAuthMode('login');
+        setFormData({ officeName: '', email: '', officeTime: '', isOnline: true });
+        router.refresh(); // Refresh to clear server components cache if any
+    };
+
+    if (view === 'loading') return <div className="p-10 text-center">Loading...</div>;
+
+    if (view === 'auth') {
+        return (
+            <DashboardLayout>
+                <div className="max-w-md w-full mx-auto mt-10 bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600 mb-2">
+                            office.
+                        </h1>
+                        <p className="text-gray-500">Manage your office workspace</p>
+                    </div>
+
+                    {/* Auth Tabs */}
+                    <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
+                        <button
+                            onClick={() => { setAuthMode('login'); setGeneratedPin(null); }}
+                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${authMode === 'login' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Login
+                        </button>
+                        <button
+                            onClick={() => { setAuthMode('register'); setGeneratedPin(null); }}
+                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${authMode === 'register' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Register
+                        </button>
+                    </div>
+
+                    {authMode === 'login' ? (
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Office PIN</label>
                                 <input
-                                    type="email"
+                                    type="password"
                                     required
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    placeholder="Enter your email"
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 outline-none focus:ring-2 focus:ring-purple-500"
+                                    placeholder="Enter 6-digit PIN"
+                                    value={authData.pin}
+                                    onChange={e => setAuthData({ ...authData, pin: e.target.value })}
                                 />
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">This email will be used for system notifications and configuration.</p>
-                        </div>
-
-                        <div className="pt-2">
                             <button
                                 type="submit"
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/30 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                                disabled={loading}
+                                className="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
                             >
-                                Save Changes
+                                {loading ? 'Verifying...' : 'Access Dashboard'}
                             </button>
+                        </form>
+                    ) : (
+                        <div className="space-y-4">
+                            {!generatedPin ? (
+                                <form onSubmit={handleRegister} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Office Name</label>
+                                        <input
+                                            required
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 outline-none focus:ring-2 focus:ring-purple-500"
+                                            placeholder="e.g. Acme Studio"
+                                            value={authData.name}
+                                            onChange={e => setAuthData({ ...authData, name: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 outline-none focus:ring-2 focus:ring-purple-500"
+                                            placeholder="admin@example.com"
+                                            value={authData.email}
+                                            onChange={e => setAuthData({ ...authData, email: e.target.value })}
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                    >
+                                        {loading ? 'Creating...' : 'Create Office'}
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="text-center py-6 animate-in fade-in zoom-in duration-300">
+                                    <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Office Created!</h3>
+                                    <p className="text-gray-500 mb-4">Your secret Login PIN is:</p>
+                                    <div className="text-4xl font-mono font-bold text-blue-600 tracking-widest bg-blue-50 py-4 rounded-xl border border-blue-100 mb-6 select-all">
+                                        {generatedPin}
+                                    </div>
+                                    <p className="text-xs text-red-500 mb-6">Please save this PIN immediately. You cannot recover it.</p>
+                                    <button
+                                        onClick={() => {
+                                            setAuthData(prev => ({ ...prev, pin: generatedPin }));
+                                            setAuthMode('login');
+                                            setGeneratedPin(null);
+                                        }}
+                                        className="w-full bg-gray-900 text-white font-bold py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                                    >
+                                        Go to Login
+                                    </button>
+                                </div>
+                            )}
                         </div>
+                    )}
+                </div>
+            </DashboardLayout>
+        );
+    }
 
-                        {saved && (
-                            <div className="p-3 bg-green-50 text-green-700 rounded-lg text-center text-sm font-medium animate-fadeIn">
-                                Configuration saved successfully!
+    // Settings View (Authenticated)
+    return (
+        <DashboardLayout>
+            <div className="max-w-2xl mx-auto mt-10 space-y-8">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+                </div>
+
+                {/* Office Configuration Form */}
+                <div className="bg-white shadow rounded-lg p-6 border border-gray-100">
+                    <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m8-2a2 2 0 100-4m0 4a2 2 0 100-4m-6 8a2 2 0 100-4m0 4a2 2 0 100-4" />
+                        </svg>
+                        Office Profile
+                    </h2>
+
+                    {loading ? (
+                        <div className="text-center py-4 text-gray-500">Loading settings...</div>
+                    ) : (
+                        <form onSubmit={handleSaveSettings} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Office Name</label>
+                                    <input
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={formData.officeName}
+                                        onChange={e => setFormData({ ...formData, officeName: e.target.value })}
+                                        placeholder="e.g. Acme Corp"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
+                                    <input
+                                        type="email"
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={formData.email}
+                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                        placeholder="contact@example.com"
+                                    />
+                                </div>
                             </div>
-                        )}
-                    </form>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Office Hours</label>
+                                <input
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    value={formData.officeTime}
+                                    onChange={e => setFormData({ ...formData, officeTime: e.target.value })}
+                                    placeholder="e.g. Mon-Fri, 9AM - 6PM"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div>
+                                    <span className="block text-sm font-medium text-gray-900">Online Status</span>
+                                    <span className="text-xs text-gray-500">Show visible online indicator in dashboard</span>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={formData.isOnline}
+                                        onChange={e => setFormData({ ...formData, isOnline: e.target.checked })}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+
+                            <div className="pt-4">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/20 transition-all disabled:opacity-70"
+                                >
+                                    {saving ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+
+                <div className="bg-white shadow rounded-lg p-6 border border-gray-100">
+                    <h2 className="text-xl font-semibold mb-4 text-red-600">Danger Zone</h2>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="font-medium text-gray-900">Sign Out</p>
+                            <p className="text-sm text-gray-500">Office Pin: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{currentPin || '...'}</span></p>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+                        >
+                            Log Out
+                        </button>
+                    </div>
                 </div>
             </div>
         </DashboardLayout>

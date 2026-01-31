@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 
 const TaskSchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
+    officeId: { type: String, required: true, index: true },
     title: String,
     type: String, // 'Task', 'Story', 'Bug', 'Epic'
     status: String,

@@ -1,22 +1,51 @@
 "use client";
 
+import { useState, useEffect } from 'react';
+
 export default function Header() {
+    const [settings, setSettings] = useState(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch('/api/settings');
+                if (res.ok) {
+                    const data = await res.json();
+                    setSettings(data);
+                }
+            } catch (error) {
+                console.error("Failed to load header settings", error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
     return (
         <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10 w-full">
             {/* Left: Search or Breadcrumbs */}
             <div className="flex items-center gap-4">
                 <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
-                <div className="hidden md:flex items-center bg-gray-100 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
-                    <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        className="bg-transparent border-none focus:outline-none text-sm ml-2 text-gray-700 w-48 placeholder-gray-500"
-                    />
-                </div>
+                {settings && (
+                    <div className="hidden md:flex flex-col border-l border-gray-200 pl-4 ml-2">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-700">{settings.officeName || 'My Office'}</span>
+                            {settings.isOnline && (
+                                <span className="w-2 h-2 rounded-full bg-green-500" title="Online"></span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-gray-500">
+                            {settings.email && <span>{settings.email}</span>}
+                            {settings.officeTime && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                    <span>{settings.officeTime}</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
+
 
             {/* Right: Actions */}
             <div className="flex items-center gap-4">
@@ -33,6 +62,6 @@ export default function Header() {
                     </svg>
                 </button>
             </div>
-        </header>
+        </header >
     );
 }
