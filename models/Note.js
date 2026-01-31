@@ -11,6 +11,7 @@ const NoteSchema = new mongoose.Schema({
         default: '',
     },
     tags: [String],
+    officeId: { type: String, required: true, index: true },
 }, {
     timestamps: true,
 });
