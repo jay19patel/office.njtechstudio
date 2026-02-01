@@ -11,7 +11,7 @@ export default function TaskForm({ initialData = {}, onSubmit, loading, buttonTe
         status: initialData.status || 'Todo',
         startDate: initialData.startDate || '',
         endDate: initialData.endDate || '',
-        estimatedHours: initialData.estimatedHours || '',
+
         ...initialData
     });
 
@@ -58,7 +58,6 @@ export default function TaskForm({ initialData = {}, onSubmit, loading, buttonTe
                             onChange={e => setFormData({ ...formData, type: e.target.value })}
                         >
                             <option>Task</option>
-                            <option>Story</option>
                             <option>Bug</option>
                             <option>Epic</option>
                         </select>
@@ -78,39 +77,36 @@ export default function TaskForm({ initialData = {}, onSubmit, loading, buttonTe
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                        <input
-                            type="date"
-                            className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                            value={formData.startDate}
-                            onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                        />
+                {formData.type === 'Epic' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Start Date <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                required
+                                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                value={formData.startDate}
+                                onChange={e => setFormData({ ...formData, startDate: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                End Date <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                required
+                                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                value={formData.endDate}
+                                onChange={e => setFormData({ ...formData, endDate: e.target.value })}
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                        <input
-                            type="date"
-                            className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                            value={formData.endDate}
-                            onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                        />
-                    </div>
-                </div>
+                )}
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Working Hours</label>
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.5"
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                        value={formData.estimatedHours}
-                        onChange={e => setFormData({ ...formData, estimatedHours: e.target.value })}
-                        placeholder="e.g. 4.5"
-                    />
-                </div>
+
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>

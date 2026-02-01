@@ -137,6 +137,25 @@ export default function GuidePage() {
                             </div>
                         </div>
                     </section>
+                    {/* Sprint */}
+                    <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-pink-100 text-pink-600 rounded-lg">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-800">5. Sprints</h2>
+                        </div>
+                        <p className="text-gray-600 mb-4">
+                            The <strong>Sprint</strong> feature allows you to plan your work for a specific period (e.g., daily or weekly). It helps you focus on what matters <em>now</em> without getting overwhelmed by the entire backlog.
+                        </p>
+                        <ul className="list-disc list-inside space-y-2 text-gray-600 ml-4">
+                            <li><strong>Plan:</strong> Create a new Sprint and select tasks from your projects.</li>
+                            <li><strong>Track:</strong> Monitor your progress through the Sprint dashboard.</li>
+                            <li><strong>Focus:</strong> Keep your attention on the selected tasks for the duration of the sprint.</li>
+                        </ul>
+                    </section>
                 </div>
             </div>
         </DashboardLayout>
