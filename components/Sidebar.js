@@ -12,6 +12,7 @@ export default function Sidebar() {
         { name: "Dashboard", icon: <HomeIcon />, href: "/" },
         { name: "Projects", icon: <FolderIcon />, href: "/projects" },
         { name: "Tasks", icon: <ClipboardListIcon />, href: "/tasks" },
+        { name: "Sprint", icon: <ClockIcon />, href: "/sprint" },
         { name: "Notes", icon: <DocumentTextIcon />, href: "/notes" },
         { name: "Guide", icon: <BookIcon />, href: "/guide" },
     ];
@@ -89,6 +90,14 @@ export default function Sidebar() {
 }
 
 // Simple Icon Components
+function ClockIcon() {
+    return (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    );
+}
+
 function HomeIcon() {
     return (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -178,3 +187,5 @@ function BookIcon() {
         </svg>
     );
 }
+
+

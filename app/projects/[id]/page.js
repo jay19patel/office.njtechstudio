@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import TaskTree from '@/components/TaskTree';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -10,6 +10,9 @@ import { calculateDuration } from '@/utils/timeUtils';
 
 export default function ProjectDetailsPage() {
     const { id } = useParams();
+    const searchParams = useSearchParams();
+    const highlightId = searchParams.get('highlight');
+
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -19,6 +22,16 @@ export default function ProjectDetailsPage() {
             if (res.ok) {
                 const json = await res.json();
                 setData(json);
+
+                // Optional: Scroll to element once data is loaded and rendered
+                if (highlightId) {
+                    setTimeout(() => {
+                        const el = document.getElementById(highlightId);
+                        if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 500); // Small delay to allow rendering
+                }
             }
         } catch (err) {
             console.error(err);
@@ -97,6 +110,7 @@ export default function ProjectDetailsPage() {
                     projectId={id}
                     onEdit={true}
                     onAddSubtask={true}
+                    highlightId={highlightId}
                 />
             </div>
         </DashboardLayout>

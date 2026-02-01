@@ -11,7 +11,7 @@ const TaskSchema = new mongoose.Schema({
     endDate: String,
     assigneeId: { type: String, default: null },
     description: { type: String, default: "" },
-    estimatedHours: { type: String, default: "" },
+
     projectId: { type: String, ref: 'Project', required: true, index: true },
     parentId: { type: String, default: null, index: true }, // For subtasks
     order: { type: Number, default: 0 }

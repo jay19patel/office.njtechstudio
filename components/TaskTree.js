@@ -4,11 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { isDelayed, calculateDuration } from '@/utils/timeUtils';
 
-const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
-    const [expanded, setExpanded] = useState(false);
+const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask, highlightId }) => {
+    // Auto-expand if this task contains the highlighted task
+    const containsHighlight = task.subtasks && task.subtasks.some(t => t.id === highlightId);
+
+    const [expanded, setExpanded] = useState(containsHighlight);
     const hasSubtasks = task.subtasks && task.subtasks.length > 0;
     const delayed = isDelayed(task.startDate, task.endDate, task.status);
     const duration = calculateDuration(task.startDate, task.endDate);
+
+    const isHighlighted = task.id === highlightId;
 
     // Determine Project ID for linking
     // If task has projectId (flat list), use it. Otherwise use prop (heirarchical list)
@@ -34,13 +39,14 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
     };
 
     return (
-        <div className="mb-2 select-none">
+        <div className="mb-2 select-none" id={task.id}>
             <div
                 className={`
           flex items-center justify-between p-3 rounded-lg
-          bg-white hover:bg-gray-50 transition-colors border shadow-sm relative
+          hover:bg-gray-50 transition-all border shadow-sm relative
           ${depth > 0 ? 'ml-6 border-l-4 border-l-gray-300' : ''}
           ${delayed ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-100'}
+          ${isHighlighted ? 'ring-2 ring-blue-500 bg-blue-50 shadow-md' : 'bg-white'}
         `}
                 style={{ marginLeft: `${depth * 1.5}rem` }}
             >
@@ -138,6 +144,7 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
                             projectId={activeProjectId}
                             onEdit={onEdit}
                             onAddSubtask={onAddSubtask}
+                            highlightId={highlightId}
                         />
                     ))}
                 </div>
@@ -146,7 +153,7 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask }) => {
     );
 };
 
-export default function TaskTree({ tasks, projectId, onEdit, onAddSubtask }) {
+export default function TaskTree({ tasks, projectId, onEdit, onAddSubtask, highlightId }) {
     if (!tasks || tasks.length === 0) return <div className="text-gray-500 italic p-4 text-sm">No tasks found.</div>;
 
     return (
@@ -158,6 +165,7 @@ export default function TaskTree({ tasks, projectId, onEdit, onAddSubtask }) {
                     projectId={projectId}
                     onEdit={onEdit}
                     onAddSubtask={onAddSubtask}
+                    highlightId={highlightId}
                 />
             ))}
         </div>
