@@ -2,17 +2,15 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import DailyPlan from '@/models/DailyPlan';
 import Task from '@/models/Task'; // Populate tasks
+import { getSprints } from '@/lib/data-service';
+import { cookies } from 'next/headers';
 
 // GET: Fetch all sprints
 export async function GET(request) {
     try {
-        await connectToDatabase();
-
-        // Fetch all plans/sprints, sorted by date (newest first)
-        const sprints = await DailyPlan.find({})
-            .sort({ date: -1, createdAt: -1 })
-            .populate('tasks');
-
+        const cookieStore = await cookies();
+        const officeId = cookieStore.get('officePin')?.value;
+        const sprints = await getSprints(officeId);
         return NextResponse.json({ sprints });
     } catch (error) {
         console.error("Error fetching sprints:", error);

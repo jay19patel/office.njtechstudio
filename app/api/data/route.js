@@ -1,8 +1,4 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import connectToDatabase from '@/lib/db';
-import Project from '@/models/Project';
-import Task from '@/models/Task';
+import { getOfficeData } from '@/lib/data-service';
 import { cookies } from 'next/headers';
 
 // Helper to flatten task tree for DB insertion
@@ -24,60 +20,14 @@ function flattenTasks(tasks, projectId, parentId = null, officeId) {
     return flat;
 }
 
-// Helper to reconstruct task tree
-function buildTaskTree(tasks, parentId = null) {
-    return tasks
-        .filter(t => t.parentId === parentId)
-        .map(t => ({
-            ...t,
-            subtasks: buildTaskTree(tasks, t.id)
-        }));
-}
 
 export async function GET() {
     try {
-        await connectToDatabase();
         const cookieStore = await cookies();
         const officePin = cookieStore.get('officePin')?.value;
 
-        if (!officePin) {
-            return Response.json({ projects: [], sprints: [] });
-        }
-
-        // 2. Fetch Data Scoped by Office
-        const projects = await Project.find({ officeId: officePin }).lean();
-        // Fetch tasks that belong to this office (or we could fetch by projectIds, but officeId is safer/easier)
-        const allTasks = await Task.find({ officeId: officePin }).lean();
-
-        // 3. Reconstruct Tree
-        // Clean _id and __v
-        const cleanProjects = projects.map(p => {
-            const { _id, __v, officeId, ...rest } = p; // remove officeId from response if strictly needed, or keep it
-            return rest;
-        });
-
-        const cleanTasks = allTasks.map(t => {
-            const { _id, __v, projectId, parentId, officeId, ...rest } = t;
-            return {
-                ...rest,
-                projectId,
-                parentId,
-                id: t.id
-            };
-        });
-
-        // Attach tasks to projects
-        cleanProjects.forEach(p => {
-            // Find root tasks for this project
-            const projectTasks = cleanTasks.filter(t => t.projectId === p.id);
-            p.tasks = buildTaskTree(projectTasks, null);
-        });
-
-        // Return expected format
-        return Response.json({
-            projects: cleanProjects,
-            sprints: []
-        });
+        const data = await getOfficeData(officePin);
+        return Response.json(data);
 
     } catch (error) {
         console.error("Error reading data:", error);
