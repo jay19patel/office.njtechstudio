@@ -11,7 +11,8 @@ export default async function Page() {
 
     await queryClient.prefetchQuery({
         queryKey: ['projectData'],
-        queryFn: () => getOfficeData(officePin)
+        queryFn: () => getOfficeData(officePin),
+        staleTime: 60 * 1000,
     });
 
     return (

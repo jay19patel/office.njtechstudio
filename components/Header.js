@@ -1,24 +1,20 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Header() {
-    const [settings, setSettings] = useState(null);
-
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const res = await fetch('/api/settings');
-                if (res.ok) {
-                    const data = await res.json();
-                    setSettings(data);
-                }
-            } catch (error) {
-                console.error("Failed to load header settings", error);
+    const { data: settings } = useQuery({
+        queryKey: ['header-settings'],
+        queryFn: async () => {
+            const res = await fetch('/api/settings');
+            if (!res.ok) {
+                throw new Error('Failed to fetch settings');
             }
-        };
-        fetchSettings();
-    }, []);
+            return res.json();
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        refetchOnWindowFocus: false,
+    });
 
     return (
         <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10 w-full">

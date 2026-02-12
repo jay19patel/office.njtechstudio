@@ -15,6 +15,7 @@ function TasksContent() {
     const searchParams = useSearchParams();
 
     // Filters from URL
+    const view = searchParams.get('view') || 'tasks';
     const filterType = searchParams.get('type') || 'All';
     const filterStatus = searchParams.get('status') || 'All';
     const filterProject = searchParams.get('project') || 'All';
@@ -77,7 +78,12 @@ function TasksContent() {
 
     // 2. Filter (Exclude Epics + Apply standard filters)
     const filteredTasks = allTasks.filter(task => {
-        if (task.type === 'Epic') return false; // Hiding Epics as requested
+        // Toggle Logic: View === 'epic' ? Show Epics Only : Show Everything Else (exclude Epics)
+        if (view === 'epic') {
+            if (task.type !== 'Epic') return false;
+        } else {
+            if (task.type === 'Epic') return false;
+        }
 
         const matchType = filterType === 'All' || task.type === filterType;
         const matchStatus = filterStatus === 'All' || task.status === filterStatus;
@@ -89,14 +95,17 @@ function TasksContent() {
         return matchType && matchStatus && matchProject && matchSearch && matchCritical;
     });
 
-    // 3. Stats (excluding Epics)
-    const tasksAndBugs = allTasks.filter(t => t.type !== 'Epic');
+    // 3. Stats (Dynamic based on View)
+    const statsItems = view === 'epic'
+        ? allTasks.filter(t => t.type === 'Epic')
+        : allTasks.filter(t => t.type !== 'Epic');
+
     const counts = {
-        pending: tasksAndBugs.filter(t => t.status === 'Pending').length,
-        inProgress: tasksAndBugs.filter(t => t.status === 'In Progress').length,
-        brainstorming: tasksAndBugs.filter(t => t.status === 'Brainstorming').length,
-        completed: tasksAndBugs.filter(t => t.status === 'Completed').length,
-        critical: tasksAndBugs.filter(t => isDelayed(t.startDate, t.endDate, t.status)).length
+        pending: statsItems.filter(t => t.status === 'Pending').length,
+        inProgress: statsItems.filter(t => t.status === 'In Progress').length,
+        brainstorming: statsItems.filter(t => t.status === 'Brainstorming').length,
+        completed: statsItems.filter(t => t.status === 'Completed').length,
+        critical: statsItems.filter(t => isDelayed(t.startDate, t.endDate, t.status)).length
     };
 
     // Helper functions for styling (matching defaults)
@@ -134,13 +143,29 @@ function TasksContent() {
                         </h1>
                         <p className="text-gray-500 mt-1">Manage and track all work items across projects.</p>
                     </div>
+
+                    {/* View Toggle */}
+                    <div className="bg-gray-100 p-1 rounded-lg flex gap-1">
+                        <button
+                            onClick={() => updateParams({ view: 'tasks' })}
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view !== 'epic' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Tasks
+                        </button>
+                        <button
+                            onClick={() => updateParams({ view: 'epic' })}
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'epic' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Epics
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                    <StatusCard label="Pending" count={counts.pending} type="warning" subtext="Tasks" isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Pending')} onClick={() => updateParams({ status: filterStatus === 'Pending' ? 'All' : 'Pending', critical: false })} />
-                    <StatusCard label="In Progress" count={counts.inProgress} type="info" subtext="Tasks" isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'In Progress')} onClick={() => updateParams({ status: filterStatus === 'In Progress' ? 'All' : 'In Progress', critical: false })} />
-                    <StatusCard label="Brainstorming" count={counts.brainstorming} type="purple" subtext="Tasks" isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Brainstorming')} onClick={() => updateParams({ status: filterStatus === 'Brainstorming' ? 'All' : 'Brainstorming', critical: false })} />
-                    <StatusCard label="Completed" count={counts.completed} type="success" subtext="Tasks" isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Completed')} onClick={() => updateParams({ status: filterStatus === 'Completed' ? 'All' : 'Completed', critical: false })} />
+                    <StatusCard label="Pending" count={counts.pending} type="warning" subtext={view === 'epic' ? 'Epics' : 'Tasks'} isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Pending')} onClick={() => updateParams({ status: filterStatus === 'Pending' ? 'All' : 'Pending', critical: false })} />
+                    <StatusCard label="In Progress" count={counts.inProgress} type="info" subtext={view === 'epic' ? 'Epics' : 'Tasks'} isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'In Progress')} onClick={() => updateParams({ status: filterStatus === 'In Progress' ? 'All' : 'In Progress', critical: false })} />
+                    <StatusCard label="Brainstorming" count={counts.brainstorming} type="purple" subtext={view === 'epic' ? 'Epics' : 'Tasks'} isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Brainstorming')} onClick={() => updateParams({ status: filterStatus === 'Brainstorming' ? 'All' : 'Brainstorming', critical: false })} />
+                    <StatusCard label="Completed" count={counts.completed} type="success" subtext={view === 'epic' ? 'Epics' : 'Tasks'} isActive={!isCritical && (filterStatus === 'All' || filterStatus === 'Completed')} onClick={() => updateParams({ status: filterStatus === 'Completed' ? 'All' : 'Completed', critical: false })} />
                     <StatusCard label="Critical" count={counts.critical} type="red" subtext="Alerts" isActive={isCritical || (filterStatus === 'All' && !isCritical)} onClick={() => updateParams({ critical: isCritical ? false : 'true', status: 'All' })} />
                 </div>
             </header>
@@ -150,11 +175,13 @@ function TasksContent() {
                     <input type="text" className="w-full bg-white border border-gray-200 rounded-lg pl-4 pr-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Search tasks..." value={searchQuery} onChange={(e) => updateParams({ q: e.target.value })} />
                 </div>
                 <div className="flex gap-4 flex-wrap">
-                    <select className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none" value={filterType} onChange={(e) => updateParams({ type: e.target.value })}>
-                        <option value="All">All Types</option>
-                        <option value="Task">Task</option>
-                        <option value="Bug">Bug</option>
-                    </select>
+                    {view !== 'epic' && (
+                        <select className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none" value={filterType} onChange={(e) => updateParams({ type: e.target.value })}>
+                            <option value="All">All Types</option>
+                            <option value="Task">Task</option>
+                            <option value="Bug">Bug</option>
+                        </select>
+                    )}
                     <select className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none" value={filterStatus} onChange={(e) => updateParams({ status: e.target.value })}>
                         <option value="All">All Statuses</option>
                         <option value="Pending">Pending</option>
