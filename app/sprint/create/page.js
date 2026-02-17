@@ -24,7 +24,6 @@ export default function CreateSprintPage() {
             const data = await api.getAllTasks();
             setGroupedTasks(data.groupedTasks || []);
         } catch (error) {
-        } catch (error) {
             console.error("Failed to fetch tasks", error);
         } finally {
             setLoading(false);
