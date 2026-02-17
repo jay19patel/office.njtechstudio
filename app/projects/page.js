@@ -1,6 +1,7 @@
 
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query';
 import { getOfficeData } from '@/lib/data-service';
+import { KEYS } from '@/hooks/useData';
 import PageContent from './PageContent';
 import { cookies } from 'next/headers';
 
@@ -10,8 +11,11 @@ export default async function Page() {
     const officePin = cookieStore.get('officePin')?.value;
 
     await queryClient.prefetchQuery({
-        queryKey: ['projectData'],
-        queryFn: () => getOfficeData(officePin)
+        queryKey: KEYS.PROJECTS,
+        queryFn: async () => {
+            const data = await getOfficeData(officePin);
+            return { projects: data.projects };
+        }
     });
 
     return (

@@ -31,6 +31,10 @@ export default function SettingsPage() {
         isOnline: true
     });
 
+    // PIN Reset state
+    const [showResetPin, setShowResetPin] = useState(false);
+    const [pinData, setPinData] = useState({ newPin: '', confirmPin: '' });
+
     // React Query for settings - will be hydrated if prefetched
     const { data: settingsData, isSuccess, refetch } = useQuery({
         queryKey: ['settings'],
@@ -342,22 +346,76 @@ export default function SettingsPage() {
                     </form>
                 </div>
 
-                <div className="bg-white shadow rounded-lg p-6 border border-gray-100">
+                <div className="bg-white shadow rounded-lg p-6 border border-red-100">
                     <h2 className="text-xl font-semibold mb-4 text-red-600">Danger Zone</h2>
-                    <div className="flex items-center justify-between">
+
+                    <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-100">
                         <div>
                             <p className="font-medium text-gray-900">Sign Out</p>
-                            <p className="text-sm text-gray-500">Office Pin: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{currentPin || '...'}</span></p>
+                            <p className="text-sm text-gray-500">Current Office Pin: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{currentPin || '...'}</span></p>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+                            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                         >
                             Log Out
                         </button>
                     </div>
+
+                    <div>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="font-medium text-gray-900">Reset Office PIN</p>
+                                <p className="text-sm text-gray-500">Change your access PIN. Use with caution.</p>
+                            </div>
+                            <button
+                                onClick={() => setShowResetPin(!showResetPin)}
+                                className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
+                            >
+                                {showResetPin ? 'Cancel' : 'Reset PIN'}
+                            </button>
+                        </div>
+
+                        {showResetPin && (
+                            <form onSubmit={handleResetPin} className="mt-4 p-4 bg-red-50 rounded-lg border border-red-100 animate-in slide-in-from-top-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-red-800 uppercase tracking-wider mb-1">New PIN</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            className="w-full bg-white border border-red-200 rounded p-2 text-gray-900 outline-none focus:ring-2 focus:ring-red-500"
+                                            value={pinData.newPin}
+                                            onChange={e => setPinData({ ...pinData, newPin: e.target.value })}
+                                            placeholder="New PIN"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-red-800 uppercase tracking-wider mb-1">Confirm PIN</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            className="w-full bg-white border border-red-200 rounded p-2 text-gray-900 outline-none focus:ring-2 focus:ring-red-500"
+                                            value={pinData.confirmPin}
+                                            onChange={e => setPinData({ ...pinData, confirmPin: e.target.value })}
+                                            placeholder="Confirm New PIN"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end">
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="bg-red-600 text-white px-4 py-2 rounded shadow-sm hover:bg-red-700 transition-colors text-sm font-bold disabled:opacity-70"
+                                    >
+                                        {saving ? 'Updating...' : 'Update PIN'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
                 </div>
             </div>
-        </DashboardLayout>
+        </DashboardLayout >
     );
 }

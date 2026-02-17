@@ -10,6 +10,7 @@ import 'react-quill-new/dist/quill.snow.css'; // Import Quill styles
 // Dynamic import for ReactQuill to avoid SSR issues
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
+import { api } from '@/services/api';
 
 // Dynamic import for ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(() => {
@@ -61,18 +62,8 @@ export default function CreateNotePage() {
 
         setSaving(true);
         try {
-            const res = await fetch('/api/notes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content }),
-            });
-
-            if (res.ok) {
-                router.push('/notes');
-            } else {
-                const data = await res.json();
-                alert(data.error || 'Failed to save note');
-            }
+            await api.createNote({ title, content });
+            router.push('/notes');
         } catch (error) {
             console.error(error);
             alert(error.message || 'Error saving note');

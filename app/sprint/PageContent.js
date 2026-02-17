@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
 import { format } from "date-fns";
 import { useSprintData } from "@/utils/hooks";
+import { api } from "@/services/api";
 
 export default function SprintListPage() {
     const { data, isLoading } = useSprintData();
@@ -33,16 +34,13 @@ export default function SprintListPage() {
         if (!confirm("Are you sure you want to delete this sprint?")) return;
 
         try {
-            const res = await fetch(`/api/sprint?id=${sprintId}`, { method: 'DELETE' });
-            if (res.ok) {
-                // Optimistically update or refetch
-                // For now, simple reload or we can try to filter `data` if we had control.
-                // Let's just reload the window or refetch if I can access it.
-                // Since I can't easily access refetch without destructuring it...
-                window.location.reload();
-            } else {
-                alert("Failed to delete sprint");
-            }
+            await api.delete(`/sprint?id=${sprintId}`);
+            // Optimistically update or refetch
+            // Optimistically update or refetch
+            // For now, simple reload or we can try to filter `data` if we had control.
+            // Let's just reload the window or refetch if I can access it.
+            // Since I can't easily access refetch without destructuring it...
+            window.location.reload();
         } catch (error) {
             console.error("Error deleting sprint:", error);
         }

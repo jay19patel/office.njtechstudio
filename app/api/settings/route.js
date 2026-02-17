@@ -23,7 +23,8 @@ export async function GET() {
             officeName: office.name,
             email: office.email,
             officeTime: office.settings?.officeTime || '9:00 AM - 6:00 PM',
-            isOnline: office.settings?.isOnline ?? true
+            isOnline: office.settings?.isOnline ?? true,
+            lastLogin: office.lastLogin
         });
     } catch (error) {
         console.error("Error fetching settings:", error);
@@ -43,16 +44,20 @@ export async function POST(request) {
 
         const data = await request.json();
 
+        const updateData = {
+            name: data.officeName,
+            email: data.email,
+            'settings.officeTime': data.officeTime,
+            'settings.isOnline': data.isOnline
+        };
+
+        if (data.newPin) {
+            updateData.pin = data.newPin;
+        }
+
         const updatedOffice = await Office.findOneAndUpdate(
             { pin: officePin },
-            {
-                $set: {
-                    name: data.officeName,
-                    email: data.email,
-                    'settings.officeTime': data.officeTime,
-                    'settings.isOnline': data.isOnline
-                }
-            },
+            { $set: updateData },
             { new: true }
         );
 

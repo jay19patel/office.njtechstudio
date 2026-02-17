@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { useGlobal } from "@/context/GlobalContext";
 
 export default function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
+    const { navigate } = useGlobal();
 
     const menuItems = [
         { name: "Dashboard", icon: <HomeIcon />, href: "/" },
@@ -43,6 +45,10 @@ export default function Sidebar() {
                     <Link
                         key={item.name}
                         href={item.href}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            navigate(item.href);
+                        }}
                         className={`group flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 ${pathname === item.href
                             ? "bg-purple-50 text-purple-700 font-medium"
                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -70,6 +76,10 @@ export default function Sidebar() {
             <div className="p-4 border-t border-gray-100">
                 <Link
                     href="/settings"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        navigate("/settings");
+                    }}
                     className={`flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 ${pathname === '/settings' ? "bg-purple-50 text-purple-700 font-medium" : ""
                         }`}
                 >

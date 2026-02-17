@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusCard from '@/components/StatusCard';
-import { useProjectData } from '@/utils/hooks';
+import { useProjects } from '@/hooks/useData';
 
 function ProjectsContent() {
-    const { data, isLoading, error } = useProjectData();
+    const { data, isLoading, error } = useProjects();
     const searchParams = useSearchParams();
     const router = useRouter();
 

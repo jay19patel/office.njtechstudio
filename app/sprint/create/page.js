@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useRouter } from "next/navigation";
+import { api } from "@/services/api";
 
 export default function CreateSprintPage() {
     const router = useRouter();
@@ -20,11 +21,9 @@ export default function CreateSprintPage() {
 
     const fetchTasks = async () => {
         try {
-            const res = await fetch("/api/tasks");
-            if (res.ok) {
-                const data = await res.json();
-                setGroupedTasks(data.groupedTasks || []);
-            }
+            const data = await api.getAllTasks();
+            setGroupedTasks(data.groupedTasks || []);
+        } catch (error) {
         } catch (error) {
             console.error("Failed to fetch tasks", error);
         } finally {
@@ -59,19 +58,8 @@ export default function CreateSprintPage() {
         }
 
         try {
-            const res = await fetch("/api/sprint", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, date, taskIds: selectedTaskIds }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                router.push("/sprint");
-            } else {
-                alert(data.error || "Failed to save sprint.");
-            }
+            await api.createSprint({ title, date, taskIds: selectedTaskIds });
+            router.push("/sprint");
         } catch (error) {
             console.error(error);
             alert("An error occurred.");

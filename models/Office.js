@@ -17,6 +17,9 @@ const OfficeSchema = new mongoose.Schema({
     settings: {
         officeTime: { type: String, default: '9:00 AM - 6:00 PM' },
         isOnline: { type: Boolean, default: true },
+    },
+    lastLogin: {
+        type: Date,
     }
 }, {
     timestamps: true,

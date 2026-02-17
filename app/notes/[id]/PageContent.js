@@ -6,24 +6,15 @@ import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
-import { useQuery } from '@tanstack/react-query';
+import { useNote } from '@/hooks/useData';
+import { api } from '@/services/api';
 
-// Fetcher for client-side fallback
-const fetchNote = async (id) => {
-    const res = await fetch(`/api/notes/${id}`);
-    if (!res.ok) throw new Error('Note not found');
-    return res.json();
-};
 
 export default function NoteViewPage() {
     const { id } = useParams();
     const router = useRouter();
 
-    const { data: note, isLoading, isError } = useQuery({
-        queryKey: ['note', id],
-        queryFn: () => fetchNote(id),
-        staleTime: 60000
-    });
+    const { data: note, isLoading, isError } = useNote(id);
 
     useEffect(() => {
         if (note) {
@@ -37,7 +28,7 @@ export default function NoteViewPage() {
         if (!confirm('Are you sure you want to delete this note?')) return;
 
         try {
-            await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+            await api.delete(`/notes/${id}`);
             router.push('/notes');
         } catch (error) {
             console.error(error);

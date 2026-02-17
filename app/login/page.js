@@ -7,12 +7,25 @@ export default function LoginPage() {
   const [pin, setPin] = useState('');
   const router = useRouter();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (pin.trim()) {
-      // Set cookie that expires in 30 days
-      document.cookie = `officePin=${pin}; path=/; max-age=${60 * 60 * 24 * 30}`;
-      router.push('/');
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+
+        if (res.ok) {
+          router.push('/');
+        } else {
+          alert('Invalid PIN');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed');
+      }
     }
   };
 
