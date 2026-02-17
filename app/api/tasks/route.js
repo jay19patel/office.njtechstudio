@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
+import { cookies } from 'next/headers';
 import Task from '@/models/Task';
 import Project from '@/models/Project';
 
