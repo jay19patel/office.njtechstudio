@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusCard from '@/components/StatusCard';
-import { useProjectData } from '@/utils/hooks';
+import { useAllTasks } from '@/hooks/useData';
 import { isDelayed, calculateDuration } from '@/utils/timeUtils';
 
 function TasksContent() {
-    const { data, isLoading: loading } = useProjectData();
+    const { data, isLoading: loading } = useAllTasks();
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -240,7 +240,6 @@ function TasksContent() {
                                         )}
 
                                         <div className="flex items-center gap-3">
-                                            {/* Spacer imitating the collapse button width for consistency if needed, or just plain */}
                                             <div className="w-1 bg-transparent"></div>
 
                                             <div>
@@ -265,9 +264,6 @@ function TasksContent() {
                                             <span className={`px-2 py-0.5 rounded text-xs border ${getStatusColor(task.status)}`}>
                                                 {task.status}
                                             </span>
-                                            {/* We can hide action buttons in this view to keep it clean, or show Edit icon */}
-                                            {/* User wants "click pe vo task projects me khul ke" -> whole card clickable. */}
-                                            {/* So explicitly no internal buttons that might block propagation, or handle them carefully */}
                                         </div>
                                     </div>
                                 </Link>

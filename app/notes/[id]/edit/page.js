@@ -9,6 +9,7 @@ import 'react-quill-new/dist/quill.snow.css';
 
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';
+import { api } from '@/services/api';
 
 const ReactQuill = dynamic(() => {
     if (typeof window !== 'undefined') {
@@ -56,8 +57,7 @@ export default function EditNotePage() {
         const fetchNote = async () => {
             if (!id) return;
             try {
-                const res = await fetch(`/api/notes/${id}`);
-                const data = await res.json();
+                const data = await api.getNote(id);
                 if (data) {
                     setTitle(data.title);
                     setContent(data.content);
@@ -77,18 +77,8 @@ export default function EditNotePage() {
 
         setSaving(true);
         try {
-            const res = await fetch(`/api/notes/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content }),
-            });
-
-            if (res.ok) {
-                router.push(`/notes/${id}`);
-            } else {
-                const data = await res.json();
-                alert(data.error || 'Failed to save');
-            }
+            await api.updateNote(id, { title, content });
+            router.push(`/notes/${id}`);
         } catch (error) {
             console.error(error);
             alert(error.message || 'Error saving');

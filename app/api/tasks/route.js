@@ -7,47 +7,51 @@ import Project from '@/models/Project';
 export async function GET(request) {
     try {
         await connectToDatabase();
-        const officeId = request.headers.get('x-office-id') || 'default-office';
+        const cookieStore = await cookies();
+        // Fallback or use header, but consistency suggests cookie
+        const officePin = cookieStore.get('officePin')?.value || request.headers.get('x-office-id');
 
-        // 1. Fetch Active Projects (not Completed)
-        // User said: "jisnte bhi projesct complated nahi he sab dikhe"
-        // Using regex for case-insensitive check to be safer.
+        if (!officePin) return NextResponse.json({ projects: [] });
+
+        // 1. Fetch Active Projects
         const projects = await Project.find({
-            status: { $not: /^completed$/i }
+            officeId: officePin,
+            status: { $ne: 'Completed' }
         }).sort({ createdAt: -1 }).lean();
 
-        console.log(`Found ${projects.length} active projects for office ${officeId}`);
+        const projectCustomIds = projects.map(p => p.id || p._id.toString());
 
-        // 2. Fetch Tasks for these projects
-        // We also want to exclude completed tasks? User said "uske chile me task dikhe". 
-        // Typically in daily planning you might want to pick from todo/progress. 
-        // Let's exclude 'Completed' tasks too to declutter.
-
-        // Note: Task.projectId is likely the _id of the project (if using Mongoose refs correctly)
-        // OR the custom 'id' field. Let's try matching both to be safe or assuming _id.
-        // Given the schemas, it's safer to fetch all tasks for office and filter in memory or filtered query.
-
-        // Note: Tasks use the custom `id` field of the Project (e.g. "p123"), NOT the MongoDB `_id`.
-        // Checked via debug: Task.projectId = "p1769926745913", Project.id = "p1769926745913".
-
-        const projectCustomIds = projects.map(p => p.id);
-
+        // 2. Fetch Active Tasks
         const tasks = await Task.find({
+            officeId: officePin,
             projectId: { $in: projectCustomIds },
             status: { $ne: 'Completed' }
         }).sort({ order: 1, createdAt: -1 }).lean();
 
-        // 3. Group Tasks by Project
-        const groupedData = projects.map(project => {
-            // Match using custom ID
-            const projectTasks = tasks.filter(t => t.projectId === project.id);
+        // 3. Attach tasks to projects
+        const projectsWithTasks = projects.map(p => {
+            const pid = p.id || p._id.toString();
+            const pTasks = tasks.filter(t => t.projectId === pid);
+
             return {
-                project,
-                tasks: projectTasks
+                ...p,
+                id: pid,
+                _id: p._id.toString(),
+                tasks: buildTaskTree(pTasks, null)
             };
         });
 
-        return NextResponse.json({ groupedTasks: groupedData });
+        function buildTaskTree(taskList, parentId = null) {
+            return taskList
+                .filter(t => t.parentId === parentId)
+                .map(t => ({
+                    ...t,
+                    id: t.id || t._id.toString(),
+                    subtasks: buildTaskTree(taskList, t.id || t._id.toString())
+                }));
+        }
+
+        return NextResponse.json({ projects: projectsWithTasks });
 
     } catch (error) {
         console.error("Error fetching tasks:", error);

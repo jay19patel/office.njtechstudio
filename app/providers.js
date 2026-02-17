@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import { GlobalProvider } from '@/context/GlobalContext';
 
 export default function Providers({ children }) {
     const [queryClient] = useState(() => new QueryClient({
@@ -16,7 +17,9 @@ export default function Providers({ children }) {
 
     return (
         <QueryClientProvider client={queryClient}>
-            {children}
+            <GlobalProvider>
+                {children}
+            </GlobalProvider>
         </QueryClientProvider>
     );
 }

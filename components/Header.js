@@ -37,6 +37,14 @@ export default function Header() {
                                     <span>{settings.officeTime}</span>
                                 </>
                             )}
+                            {settings.lastLogin && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                    <span title={new Date(settings.lastLogin).toLocaleString()}>
+                                        Login: {new Date(settings.lastLogin).toLocaleDateString()}
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

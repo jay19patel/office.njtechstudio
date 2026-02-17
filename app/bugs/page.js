@@ -1,27 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import TaskTree from '@/components/TaskTree';
+import { useBugs } from '@/hooks/useData';
 
 export default function BugsPage() {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading, error } = useBugs();
 
-    useEffect(() => {
-        fetch('/api/data')
-            .then(res => res.json())
-            .then(json => {
-                setData(json);
-                setLoading(false);
-            });
-    }, []);
-
-    if (loading) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
+    if (isLoading) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
+    if (error) return <DashboardLayout><div className="p-10 text-red-500">Error loading bugs</div></DashboardLayout>;
 
     // Flatten bugs from all projects
     const getAllBugs = () => {
+        if (!data?.projects) return [];
         const bugs = [];
         const traverse = (tasks, projectTitle, projectId) => {
             tasks.forEach(task => {
@@ -75,7 +67,7 @@ export default function BugsPage() {
                                 </Link>
                             </div>
                             {/* Render using TaskTree for consistency, passing single item array */}
-                            <TaskTree tasks={[bug]} users={data.users} />
+                            <TaskTree tasks={[bug]} users={data.users || []} />
                         </div>
                     ))}
                 </div>

@@ -1,6 +1,7 @@
 
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query';
 import { getSprints } from '@/lib/data-service';
+import { KEYS } from '@/hooks/useData';
 import PageContent from './PageContent';
 import { cookies } from 'next/headers';
 
@@ -10,7 +11,7 @@ export default async function Page() {
     const officePin = cookieStore.get('officePin')?.value;
 
     await queryClient.prefetchQuery({
-        queryKey: ['sprintData'],
+        queryKey: KEYS.SPRINTS,
         queryFn: () => getSprints(officePin)
     });
 
