@@ -18,50 +18,26 @@ function NewTaskContent() {
     const handleCreate = async (formData) => {
         setLoading(true);
         try {
-            const res = await fetch('/api/data');
-            const data = await res.json();
-
-            // Find project
-            const projectIndex = data.projects.findIndex(p => p.id === id);
-            if (projectIndex === -1) throw new Error("Project not found");
-
             const newTask = {
                 id: `t${Date.now()}`,
                 subtasks: [],
                 notes: '',
                 timeLogs: [],
-                ...formData
+                ...formData,
+                projectId: id,
+                parentId: parentId || null
             };
 
-            if (parentId) {
-                // Add as subtask
-                const addTaskRecursive = (tasks) => {
-                    for (let i = 0; i < tasks.length; i++) {
-                        if (tasks[i].id === parentId) {
-                            if (!tasks[i].subtasks) tasks[i].subtasks = [];
-                            tasks[i].subtasks.push(newTask);
-                            return true;
-                        }
-                        if (tasks[i].subtasks && addTaskRecursive(tasks[i].subtasks)) return true;
-                    }
-                    return false;
-                };
-
-                const found = addTaskRecursive(data.projects[projectIndex].tasks);
-                if (!found) {
-                    console.error("Parent task not found, adding to root");
-                    data.projects[projectIndex].tasks.push(newTask);
-                }
-            } else {
-                // Add to root
-                data.projects[projectIndex].tasks.push(newTask);
-            }
-
-            await fetch('/api/data', {
+            const res = await fetch('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(newTask)
             });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || "Failed to create task");
+            }
 
             router.push(`/projects/${id}`);
         } catch (error) {

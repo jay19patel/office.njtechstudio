@@ -144,6 +144,42 @@ export default function SettingsPage() {
         }
     };
 
+    const handleResetPin = async (e) => {
+        e.preventDefault();
+        if (pinData.newPin !== pinData.confirmPin) {
+            alert("PINs do not match!");
+            return;
+        }
+        if (pinData.newPin.length < 4) {
+            alert("PIN must be at least 4 characters.");
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newPin: pinData.newPin })
+            });
+
+            if (res.ok) {
+                alert("PIN updated successfully! Please login with your new PIN.");
+                // Logout to force re-auth with new PIN
+                handleLogout();
+            } else {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to update PIN");
+            }
+        } catch (error) {
+            alert(error.message || "Error updating PIN");
+        } finally {
+            setSaving(false);
+            setShowResetPin(false);
+            setPinData({ newPin: '', confirmPin: '' });
+        }
+    };
+
     const handleLogout = () => {
         document.cookie = 'officePin=; path=/; max-age=0';
         setCurrentPin('');

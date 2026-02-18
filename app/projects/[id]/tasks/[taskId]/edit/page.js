@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import TaskForm from '@/components/TaskForm';
+import { useUpdateTask } from '@/hooks/useData';
 
 export default function EditTaskPage() {
     const router = useRouter();
@@ -16,65 +17,35 @@ export default function EditTaskPage() {
         // Fetch existing task data
         const loadTask = async () => {
             try {
-                const res = await fetch('/api/data');
-                const data = await res.json();
-                const project = data.projects.find(p => p.id === id);
-                if (!project) return;
-
-                const findTask = (tasks) => {
-                    for (const t of tasks) {
-                        if (t.id === taskId) return t;
-                        if (t.subtasks) {
-                            const found = findTask(t.subtasks);
-                            if (found) return found;
-                        }
-                    }
-                    return null;
-                };
-
-                const task = findTask(project.tasks);
-                if (task) setInitialData(task);
+                const res = await fetch(`/api/tasks/${taskId}`);
+                if (!res.ok) throw new Error("Task not found");
+                const task = await res.json();
+                setInitialData(task);
             } catch (err) {
                 console.error(err);
+                router.push(`/projects/${id}`); // Redirect if not found
             }
         };
-        loadTask();
-    }, [id, taskId]);
+        if (taskId) loadTask();
+    }, [id, taskId, router]);
+
+    const { mutate: updateTask, isPending: isUpdating } = useUpdateTask();
 
     const handleUpdate = async (formData) => {
         setLoading(true);
-        try {
-            const res = await fetch('/api/data');
-            const data = await res.json();
-            const projectIndex = data.projects.findIndex(p => p.id === id);
-
-            const updateTaskRecursive = (tasks) => {
-                for (let i = 0; i < tasks.length; i++) {
-                    if (tasks[i].id === taskId) {
-                        tasks[i] = { ...tasks[i], ...formData };
-                        return true;
-                    }
-                    if (tasks[i].subtasks) {
-                        if (updateTaskRecursive(tasks[i].subtasks)) return true;
-                    }
-                }
-                return false;
-            };
-
-            updateTaskRecursive(data.projects[projectIndex].tasks);
-
-            await fetch('/api/data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            router.push(`/projects/${id}`);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
+        updateTask({ taskId, data: formData }, {
+            onSuccess: () => {
+                router.push(`/projects/${id}`);
+                router.refresh(); // Ensure Next.js server components also refresh if any
+            },
+            onError: (error) => {
+                console.error(error);
+                alert("Failed to update task. Please try again.");
+            },
+            onSettled: () => {
+                setLoading(false);
+            }
+        });
     };
 
     if (!initialData) return <DashboardLayout><div className="p-10">Loading Task...</div></DashboardLayout>;

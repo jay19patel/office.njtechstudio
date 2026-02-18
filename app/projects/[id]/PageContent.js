@@ -6,7 +6,7 @@ import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProgressBar from '@/components/ProgressBar';
 import { calculateDuration } from '@/utils/timeUtils';
-import { useProjectData } from '@/utils/hooks';
+import { useProject } from '@/hooks/useData';
 import { useEffect } from 'react';
 
 export default function ProjectDetailsPage() {
@@ -14,10 +14,10 @@ export default function ProjectDetailsPage() {
     const searchParams = useSearchParams();
     const highlightId = searchParams.get('highlight');
 
-    const { data, isLoading, isError } = useProjectData();
+    const { data: project, isLoading, isError } = useProject(id);
 
     useEffect(() => {
-        if (data && highlightId) {
+        if (project && highlightId) {
             setTimeout(() => {
                 const el = document.getElementById(highlightId);
                 if (el) {
@@ -25,12 +25,11 @@ export default function ProjectDetailsPage() {
                 }
             }, 500);
         }
-    }, [data, highlightId]);
+    }, [project, highlightId]);
 
     if (isLoading) return <DashboardLayout><div className="p-10 text-gray-500 animate-pulse">Loading Project...</div></DashboardLayout>;
     if (isError) return <DashboardLayout><div className="p-10 text-red-500">Error loading project</div></DashboardLayout>;
 
-    const project = data?.projects?.find(p => p.id === id);
     if (!project) return <DashboardLayout><div className="p-10 text-red-500">Project Not Found</div></DashboardLayout>;
 
     // Calculate Duration

@@ -31,7 +31,7 @@ export const api = {
     getOfficeSettings: (pin) => fetchClient(`/settings?pin=${pin}`),
 
     // Data
-    getBugs: () => fetchClient('/data'),
+
     getSprints: () => fetchClient('/sprint'),
     getSprintDaily: (date) => fetchClient(`/sprint/daily?date=${date}`),
 
@@ -43,9 +43,9 @@ export const api = {
     getAllTasks: () => fetchClient('/tasks'),
     getTasks: (projectId) => fetchClient(`/projects/${projectId}/tasks`),
     getTask: (projectId, taskId) => fetchClient(`/projects/${projectId}/tasks/${taskId}`),
-    updateTask: (taskId, data) => fetchClient(`/tasks`, {
+    updateTask: (taskId, data) => fetchClient(`/tasks/${taskId}`, {
         method: 'PUT',
-        body: JSON.stringify({ id: taskId, ...data })
+        body: JSON.stringify(data)
     }),
 
     // Notes

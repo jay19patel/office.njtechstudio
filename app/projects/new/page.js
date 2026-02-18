@@ -104,32 +104,15 @@ export default function NewProjectPage() {
         setLoading(true);
 
         try {
-            // CRITICAL FIX: Fetch existing data first to avoid overwriting
-            const res = await fetch('/api/data');
-
-            if (res.status === 401) {
-                alert("Session expired or unauthorized. Please login with your Office Pin.");
-                router.push('/login');
-                return;
-            }
-
-            const data = await res.json();
-
             const newProject = {
-                id: `p${Date.now()}`,
                 ...formData,
                 tasks: tasks
             };
 
-            const newData = {
-                ...data,
-                projects: [...(data.projects || []), newProject]
-            };
-
-            const saveRes = await fetch('/api/data', {
+            const saveRes = await fetch('/api/projects', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newData)
+                body: JSON.stringify(newProject)
             });
 
             if (saveRes.status === 401) {
