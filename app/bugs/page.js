@@ -3,17 +3,18 @@
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import TaskTree from '@/components/TaskTree';
-import { useBugs } from '@/hooks/useData';
+import { useAllTasks } from '@/hooks/useData';
 
 export default function BugsPage() {
-    const { data, isLoading, error } = useBugs();
+    const { data: projects, isLoading, error } = useAllTasks();
 
     if (isLoading) return <DashboardLayout><div className="p-10 text-gray-500">Loading...</div></DashboardLayout>;
     if (error) return <DashboardLayout><div className="p-10 text-red-500">Error loading bugs</div></DashboardLayout>;
 
     // Flatten bugs from all projects
     const getAllBugs = () => {
-        if (!data?.projects) return [];
+        if (!projects) return [];
+
         const bugs = [];
         const traverse = (tasks, projectTitle, projectId) => {
             tasks.forEach(task => {
@@ -28,7 +29,7 @@ export default function BugsPage() {
             });
         };
 
-        data.projects.forEach(p => traverse(p.tasks, p.title, p.id));
+        projects.forEach(p => traverse(p.tasks, p.title, p.id));
         return bugs;
     };
 

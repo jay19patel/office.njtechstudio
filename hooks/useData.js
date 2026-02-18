@@ -19,13 +19,7 @@ export const KEYS = {
 
 // Hooks
 
-export function useBugs() {
-    return useQuery({
-        queryKey: KEYS.BUGS,
-        queryFn: api.getBugs,
-        staleTime: 1000 * 60 * 5, // 5 minutes
-    });
-}
+
 
 export function useSprints() {
     return useQuery({
@@ -99,6 +93,8 @@ export function useUpdateTask() {
         mutationFn: ({ taskId, data }) => api.updateTask(taskId, data),
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: KEYS.PROJECTS });
+            queryClient.invalidateQueries({ queryKey: KEYS.ALL_TASKS });
+            // Invalidate project-specific tasks if we had the projectId, but simple invalidation is safer
         },
     });
 }

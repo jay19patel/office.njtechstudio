@@ -1,14 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { isDelayed, calculateDuration } from '@/utils/timeUtils';
 
 const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask, highlightId }) => {
-    // Auto-expand if this task contains the highlighted task
-    const containsHighlight = task.subtasks && task.subtasks.some(t => t.id === highlightId);
+    // Recursive check for highlight
+    const checkHighlight = (t) => {
+        if (t.id === highlightId) return true;
+        if (t.subtasks) return t.subtasks.some(checkHighlight);
+        return false;
+    };
+
+    // Auto-expand if this task contains the highlighted task (recursively)
+    const containsHighlight = task.subtasks && task.subtasks.some(checkHighlight);
 
     const [expanded, setExpanded] = useState(containsHighlight);
+
+    // Sync expansion when highlightId changes
+    useEffect(() => {
+        if (containsHighlight) {
+            setExpanded(true);
+        }
+    }, [highlightId, containsHighlight]);
+
     const hasSubtasks = task.subtasks && task.subtasks.length > 0;
     const delayed = isDelayed(task.startDate, task.endDate, task.status);
     const duration = calculateDuration(task.startDate, task.endDate);
@@ -32,7 +47,6 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask, highlightI
     const getTypeColor = (type) => {
         switch (type) {
             case 'Epic': return 'text-purple-600 bg-purple-50 px-1 rounded';
-            case 'Story': return 'text-orange-600 bg-orange-50 px-1 rounded';
             case 'Bug': return 'text-red-600 bg-red-50 px-1 rounded border border-red-200';
             default: return 'text-blue-600 bg-blue-50 px-1 rounded';
         }
@@ -40,13 +54,44 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask, highlightI
 
     return (
         <div className="mb-2 select-none" id={task.id}>
+            <style jsx>{`
+                @keyframes dash {
+                    0% {
+                        background-position: 0 0, 0 100%, 0 0, 100% 0;
+                    }
+                    100% {
+                        background-position: 20px 0, -20px 100%, 0 -20px, 100% 20px;
+                    }
+                }
+                .animate-dashed-border {
+                    background-image: 
+                        linear-gradient(90deg, #3b82f6 50%, transparent 50%), 
+                        linear-gradient(90deg, #3b82f6 50%, transparent 50%), 
+                        linear-gradient(0deg, #3b82f6 50%, transparent 50%), 
+                        linear-gradient(0deg, #3b82f6 50%, transparent 50%);
+                    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+                    background-size: 10px 1px, 10px 1px, 1px 10px, 1px 10px;
+                    background-position: 0 0, 0 100%, 0 0, 100% 0;
+                    animation: dash 1s linear infinite;
+                }
+                .animate-dashed-border-red {
+                    background-image: 
+                        linear-gradient(90deg, #ef4444 50%, transparent 50%), 
+                        linear-gradient(90deg, #ef4444 50%, transparent 50%), 
+                        linear-gradient(0deg, #ef4444 50%, transparent 50%), 
+                        linear-gradient(0deg, #ef4444 50%, transparent 50%);
+                    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+                    background-size: 10px 1px, 10px 1px, 1px 10px, 1px 10px;
+                    background-position: 0 0, 0 100%, 0 0, 100% 0;
+                    animation: dash 1s linear infinite;
+                }
+            `}</style>
             <div
                 className={`
           flex items-center justify-between p-3 rounded-lg
           hover:bg-gray-50 transition-all border shadow-sm relative
           ${depth > 0 ? 'ml-6 border-l-4 border-l-gray-300' : ''}
-          ${delayed ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-100'}
-          ${isHighlighted ? 'ring-2 ring-blue-500 bg-blue-50 shadow-md' : 'bg-white'}
+          ${delayed ? 'animate-dashed-border-red bg-red-50 border-transparent' : (isHighlighted ? 'animate-dashed-border bg-blue-50 shadow-md border-transparent' : 'bg-white border-gray-100')}
         `}
                 style={{ marginLeft: `${depth * 1.5}rem` }}
             >

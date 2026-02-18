@@ -24,14 +24,20 @@ export async function POST(request) {
         await connectToDatabase();
         const body = await request.json();
         const { title, date, taskIds } = body;
-        const officeId = request.headers.get('x-office-id') || 'default-office';
+
+        const cookieStore = await cookies();
+        const officeId = cookieStore.get('officePin')?.value;
+
+        if (!officeId) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
         if (!title || !date) {
             return NextResponse.json({ error: 'Title and Date are required' }, { status: 400 });
         }
 
         // Check for existing sprint on this date
-        const existingSprint = await DailyPlan.findOne({ date });
+        const existingSprint = await DailyPlan.findOne({ date, officeId });
         if (existingSprint) {
             return NextResponse.json({ error: 'A sprint already exists for this date.' }, { status: 400 });
         }

@@ -57,9 +57,9 @@ export default function TaskForm({ initialData = {}, onSubmit, loading, buttonTe
                             value={formData.type}
                             onChange={e => setFormData({ ...formData, type: e.target.value })}
                         >
-                            <option>Task</option>
-                            <option>Bug</option>
-                            <option>Epic</option>
+                            <option value="Task">Task</option>
+                            <option value="Epic">Epic</option>
+                            <option value="Bug">Bug</option>
                         </select>
                     </div>
                     <div>

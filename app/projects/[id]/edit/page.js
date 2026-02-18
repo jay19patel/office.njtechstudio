@@ -16,42 +16,33 @@ export default function EditProjectPage() {
         // Fetch existing project data
         const loadProject = async () => {
             try {
-                const res = await fetch('/api/data');
-                const data = await res.json();
-                const project = data.projects.find(p => p.id === id);
-                if (project) setInitialData(project);
+                const res = await fetch(`/api/projects/${id}`);
+                if (!res.ok) throw new Error("Project not found");
+                const project = await res.json();
+                setInitialData(project);
             } catch (err) {
                 console.error(err);
+                router.push('/projects'); // Redirect if not found
             }
         };
-        loadProject();
-    }, [id]);
+        if (id) loadProject();
+    }, [id, router]);
 
     const handleUpdate = async (formData) => {
         setLoading(true);
         try {
-            const res = await fetch('/api/data');
-            const data = await res.json();
-            const projectIndex = data.projects.findIndex(p => p.id === id);
+            const res = await fetch(`/api/projects/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
 
-            if (projectIndex !== -1) {
-                // Preserve tasks when updating
-                data.projects[projectIndex] = {
-                    ...data.projects[projectIndex],
-                    ...formData,
-                    tasks: data.projects[projectIndex].tasks // Ensure tasks aren't overwritten by form
-                };
+            if (!res.ok) throw new Error("Failed to update project");
 
-                await fetch('/api/data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                router.push(`/projects/${id}`);
-            }
+            router.push(`/projects/${id}`);
         } catch (error) {
             console.error(error);
+            alert("Failed to update project. Please try again.");
         } finally {
             setLoading(false);
         }
