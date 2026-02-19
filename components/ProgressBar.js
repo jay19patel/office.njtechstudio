@@ -1,6 +1,6 @@
 'use client';
 
-export default function ProgressBar({ tasks = [] }) {
+export default function ProgressBar({ tasks = [], showCounts = false }) {
     // Helper to count tasks recursively
     const countStats = (taskList) => {
         let total = 0;
@@ -42,7 +42,7 @@ export default function ProgressBar({ tasks = [] }) {
 
     return (
         <div className="w-full flex flex-col gap-1">
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden flex">
+            <div className={`w-full bg-gray-200 rounded-full overflow-hidden flex ${showCounts ? 'h-3' : 'h-2'}`}>
                 {/* Completed (Green) */}
                 <div
                     className="h-full bg-green-500 transition-all duration-500"
@@ -60,8 +60,18 @@ export default function ProgressBar({ tasks = [] }) {
                 ></div>
             </div>
             <div className="flex justify-between text-[10px] text-gray-400 font-medium px-1">
-                <span>{Math.round(completedPercent)}% Done</span>
-                <span>{stats.total} Tasks</span>
+                {showCounts ? (
+                    <>
+                        <span className="text-green-600">{stats.completed} Done</span>
+                        <span className="text-yellow-600">{stats.inProgress} Active</span>
+                        <span className="text-gray-500">{stats.total} Total</span>
+                    </>
+                ) : (
+                    <>
+                        <span>{Math.round(completedPercent)}% Done</span>
+                        <span>{stats.total} Tasks</span>
+                    </>
+                )}
             </div>
         </div>
     );

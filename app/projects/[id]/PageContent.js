@@ -72,7 +72,7 @@ export default function ProjectDetailsPage() {
                         </span>
                     </div>
                     <div className="w-48">
-                        <ProgressBar tasks={project.tasks} />
+                        <ProgressBar tasks={project.tasks} showCounts={true} />
                     </div>
                 </div>
             </header>

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusCard from '@/components/StatusCard';
 import { useAllTasks } from '@/hooks/useData';
-import { isDelayed, calculateDuration } from '@/utils/timeUtils';
+import { isDelayed, calculateDuration, getOverdueDays } from '@/utils/timeUtils';
 
 function TasksContent() {
     const { data, isLoading: loading } = useAllTasks();
@@ -200,6 +200,27 @@ function TasksContent() {
                 <div className="p-10 bg-gray-50 text-gray-500 rounded-xl border border-gray-200 text-center">No tasks found.</div>
             ) : (
                 <div>
+                    <style jsx>{`
+                        @keyframes dash {
+                            0% {
+                                background-position: 0 0, 0 100%, 0 0, 100% 0;
+                            }
+                            100% {
+                                background-position: 20px 0, -20px 100%, 0 -20px, 100% 20px;
+                            }
+                        }
+                        .animate-dashed-border-red {
+                            background-image: 
+                                linear-gradient(90deg, #ef4444 50%, transparent 50%), 
+                                linear-gradient(90deg, #ef4444 50%, transparent 50%), 
+                                linear-gradient(0deg, #ef4444 50%, transparent 50%), 
+                                linear-gradient(0deg, #ef4444 50%, transparent 50%);
+                            background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+                            background-size: 10px 1px, 10px 1px, 1px 10px, 1px 10px;
+                            background-position: 0 0, 0 100%, 0 0, 100% 0;
+                            animation: dash 1s linear infinite;
+                        }
+                    `}</style>
                     {filteredTasks.map(task => {
                         const delayed = isDelayed(task.startDate, task.endDate, task.status);
                         const duration = calculateDuration(task.startDate, task.endDate);
@@ -227,15 +248,25 @@ function TasksContent() {
                                 >
                                     <div className={`
                                         flex items-center justify-between p-3 rounded-lg
-                                        bg-white hover:bg-gray-50 transition-colors border shadow-sm
-                                        ${delayed ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-100 group-hover:border-blue-300'}
+                                        hover:bg-gray-50 transition-colors border shadow-sm
+                                        ${delayed ? 'animate-dashed-border-red bg-red-50 border-transparent' : 'bg-white border-gray-100 group-hover:border-blue-300'}
                                     `}>
                                         {delayed && (
-                                            <div className="absolute top-0 right-0 -mr-2 -mt-2 z-10">
+                                            <div className="absolute top-0 right-0 -mr-2 -mt-2 z-10 group/warning">
                                                 <span className="relative flex h-4 w-4">
                                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-[8px] items-center justify-center font-bold">!</span>
+                                                    <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-[8px] items-center justify-center font-bold shadow-sm">!</span>
                                                 </span>
+
+                                                {/* Tooltip */}
+                                                <div className="absolute bottom-full right-0 mb-2 w-max max-w-[200px] hidden group-hover/warning:block z-50">
+                                                    <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 shadow-xl whitespace-nowrap">
+                                                        <div className="font-semibold text-red-300">Overdue Task</div>
+                                                        <div>Due: {new Date(task.endDate).toLocaleDateString()}</div>
+                                                        <div>Late by: {getOverdueDays(task.endDate)} days</div>
+                                                    </div>
+                                                    <div className="w-2 h-2 bg-gray-900 rotate-45 absolute bottom-[-4px] right-2"></div>
+                                                </div>
                                             </div>
                                         )}
 

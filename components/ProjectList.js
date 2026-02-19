@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import ProgressBar from './ProgressBar';
-import { isDelayed, calculateDuration } from '@/utils/timeUtils';
+import { isDelayed, calculateDuration, getOverdueDays } from '@/utils/timeUtils';
 
 export default function ProjectList({ projects }) {
     if (!projects || projects.length === 0) {
@@ -17,16 +17,42 @@ export default function ProjectList({ projects }) {
 
                 return (
                     <Link href={`/projects/${project.id}`} key={project.id} className="group relative">
-                        <div className={`p-6 rounded-2xl bg-white border hover:shadow-lg transition-all duration-300 shadow-sm
-                            ${delayed ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-100 hover:border-blue-300'}
+                        <style jsx>{`
+                            @keyframes dash {
+                                0% { background-position: 0 0, 0 100%, 0 0, 100% 0; }
+                                100% { background-position: 20px 0, -20px 100%, 0 -20px, 100% 20px; }
+                            }
+                            .animate-dashed-border-red {
+                                background-image: 
+                                    linear-gradient(90deg, #ef4444 50%, transparent 50%), 
+                                    linear-gradient(90deg, #ef4444 50%, transparent 50%), 
+                                    linear-gradient(0deg, #ef4444 50%, transparent 50%), 
+                                    linear-gradient(0deg, #ef4444 50%, transparent 50%);
+                                background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+                                background-size: 10px 1px, 10px 1px, 1px 10px, 1px 10px;
+                                background-position: 0 0, 0 100%, 0 0, 100% 0;
+                                animation: dash 1s linear infinite;
+                            }
+                        `}</style>
+                        <div className={`p-6 rounded-2xl border hover:shadow-lg transition-all duration-300 shadow-sm
+                            ${delayed ? 'animate-dashed-border-red bg-red-50 border-transparent' : 'bg-white border-gray-100 hover:border-blue-300'}
                         `}>
                             {delayed && (
-                                <div className="absolute top-0 right-0 -mt-2 -mr-2 flex h-6 w-6 relative">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-6 w-6 bg-red-500 text-white text-[10px] items-center justify-center font-bold">!</span>
-                                    <span className="absolute top-0 right-8 bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                                        Time Warning
+                                <div className="absolute top-0 right-0 -mr-2 -mt-2 z-[100] group/warning">
+                                    <span className="relative flex h-5 w-5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 text-white text-[10px] items-center justify-center font-bold shadow-sm">!</span>
                                     </span>
+
+                                    {/* Tooltip - High Z-Index */}
+                                    <div className="absolute bottom-full right-0 mb-2 w-max max-w-[200px] hidden group-hover/warning:block z-[999]">
+                                        <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 shadow-xl whitespace-nowrap">
+                                            <div className="font-semibold text-red-300">Overdue Project</div>
+                                            <div>Due: {new Date(project.endDate).toLocaleDateString()}</div>
+                                            <div>Late by: {getOverdueDays(project.endDate)} days</div>
+                                        </div>
+                                        <div className="w-2 h-2 bg-gray-900 rotate-45 absolute bottom-[-4px] right-2"></div>
+                                    </div>
                                 </div>
                             )}
 

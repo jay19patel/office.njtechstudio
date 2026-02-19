@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { isDelayed, calculateDuration } from '@/utils/timeUtils';
+import { isDelayed, calculateDuration, getOverdueDays } from '@/utils/timeUtils';
 
 const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask, highlightId }) => {
     // Recursive check for highlight
@@ -91,16 +91,26 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask, highlightI
           flex items-center justify-between p-3 rounded-lg
           hover:bg-gray-50 transition-all border shadow-sm relative
           ${depth > 0 ? 'ml-6 border-l-4 border-l-gray-300' : ''}
-          ${delayed ? 'animate-dashed-border-red bg-red-50 border-transparent' : (isHighlighted ? 'animate-dashed-border bg-blue-50 shadow-md border-transparent' : 'bg-white border-gray-100')}
+          ${isHighlighted ? 'animate-dashed-border bg-blue-50 shadow-md border-transparent' : (delayed ? 'animate-dashed-border-red bg-red-50 border-transparent' : 'bg-white border-gray-100')}
         `}
                 style={{ marginLeft: `${depth * 1.5}rem` }}
             >
                 {delayed && (
-                    <div className="absolute top-0 right-0 -mr-2 -mt-2 z-10">
+                    <div className="absolute top-0 right-0 -mr-2 -mt-2 z-10 group/warning">
                         <span className="relative flex h-4 w-4">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-[8px] items-center justify-center font-bold">!</span>
+                            <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-[8px] items-center justify-center font-bold shadow-sm">!</span>
                         </span>
+
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full right-0 mb-2 w-max max-w-[200px] hidden group-hover/warning:block z-50">
+                            <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 shadow-xl whitespace-nowrap">
+                                <div className="font-semibold text-red-300">Overdue Task</div>
+                                <div>Due: {new Date(task.endDate).toLocaleDateString()}</div>
+                                <div>Late by: {getOverdueDays(task.endDate)} days</div>
+                            </div>
+                            <div className="w-2 h-2 bg-gray-900 rotate-45 absolute bottom-[-4px] right-2"></div>
+                        </div>
                     </div>
                 )}
 
@@ -152,29 +162,31 @@ const TaskItem = ({ task, depth = 0, projectId, onEdit, onAddSubtask, highlightI
                         {task.status}
                     </span>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-1 ml-2">
-                        {onEdit && (
-                            <Link
-                                href={`/projects/${activeProjectId}/tasks/${task.id}/edit`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="p-1.5 rounded hover:bg-blue-100 text-blue-500 transition-colors"
-                                title="Edit Task"
-                            >
-                                ✎
-                            </Link>
-                        )}
-                        {onAddSubtask && activeProjectId && (
-                            <Link
-                                href={`/projects/${activeProjectId}/tasks/new?parentId=${task.id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="p-1.5 rounded hover:bg-green-100 text-green-500 transition-colors"
-                                title="Add Subtask"
-                            >
-                                +
-                            </Link>
-                        )}
-                    </div>
+                    {/* Action Buttons - Hide for Completed Tasks */}
+                    {task.status !== 'Completed' && (
+                        <div className="flex gap-1 ml-2">
+                            {onEdit && (
+                                <Link
+                                    href={`/projects/${activeProjectId}/tasks/${task.id}/edit`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-1.5 rounded hover:bg-blue-100 text-blue-500 transition-colors"
+                                    title="Edit Task"
+                                >
+                                    ✎
+                                </Link>
+                            )}
+                            {onAddSubtask && activeProjectId && (
+                                <Link
+                                    href={`/projects/${activeProjectId}/tasks/new?parentId=${task.id}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-1.5 rounded hover:bg-green-100 text-green-500 transition-colors"
+                                    title="Add Subtask"
+                                >
+                                    +
+                                </Link>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 

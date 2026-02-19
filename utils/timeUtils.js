@@ -33,3 +33,17 @@ export const calculateDuration = (startDate, endDate) => {
 
     return `${diffDays} Day${diffDays !== 1 ? 's' : ''}`;
 };
+
+export const getOverdueDays = (endDate) => {
+    if (!endDate) return 0;
+    const end = new Date(endDate);
+    const now = new Date();
+
+    // Reset time portions to compare dates only (optional, but cleaner)
+    // For now, strict time comparison
+    if (now <= end) return 0;
+
+    const diffTime = Math.abs(now - end);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+};
